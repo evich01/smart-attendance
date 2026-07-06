@@ -12,7 +12,7 @@ const Setting = require('../models/Setting');
 
 const BCRYPT_ROUNDS = 12;
 
-async function seed() {
+async function seed({ closeConnection = false } = {}) {
   await connectDB();
   console.log('[seed] Clearing existing demo collections...');
   await Promise.all([
@@ -50,13 +50,15 @@ async function seed() {
   console.log('  Lecturer: lecturer@demo.edu');
   console.log('  Student:  student@demo.edu');
 
-  await mongoose.connection.close();
+  if (closeConnection) {
+    await mongoose.connection.close();
+  }
   return { success: true };
 }
 
 // Only run automatically if called directly (not required)
 if (require.main === module) {
-  seed().catch((err) => {
+  seed({ closeConnection: true }).catch((err) => {
     console.error('[seed] Failed:', err);
     process.exit(1);
   });
