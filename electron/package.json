@@ -1,0 +1,12 @@
+{
+  "name": "smart-attendance-desktop",
+  "version": "1.0.0",
+  "description": "Offline Electron wrapper for the Smart Attendance Management System",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^31.2.1"
+  }
+}
