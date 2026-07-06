@@ -51,10 +51,15 @@ async function seed() {
   console.log('  Student:  student@demo.edu');
 
   await mongoose.connection.close();
-  process.exit(0);
+  return { success: true };
 }
 
-seed().catch((err) => {
-  console.error('[seed] Failed:', err);
-  process.exit(1);
-});
+// Only run automatically if called directly (not required)
+if (require.main === module) {
+  seed().catch((err) => {
+    console.error('[seed] Failed:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = seed;

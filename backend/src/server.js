@@ -23,6 +23,18 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, data: { status: 'ok', time: new Date().toISOString() } });
 });
 
+// TEMPORARY SEED ENDPOINT (REMOVE AFTER USE!)
+app.get('/api/seed', async (req, res) => {
+  try {
+    const seed = require('./utils/seed');
+    await seed();
+    res.json({ success: true, message: 'Seed completed! Check logs for details' });
+  } catch (err) {
+    console.error('[seed] Error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/courses', courseRoutes);
