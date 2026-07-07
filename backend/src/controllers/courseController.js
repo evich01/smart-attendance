@@ -32,6 +32,48 @@ async function enrolledCourses(req, res) {
   res.json({ success: true, data: enrollments.map((e) => e.courseId) });
 }
 
+// GET /api/courses/:id/unenrolled-students — list unenrolled students with search
+async function getUnenrolledStudents(req, res) {
+  const { search = '' } = req.query;
+  const course = await Course.findById(req.params.id);
+  if (!course) return res.status(404).json({ success: false, error: 'Course not found' });
+
+  // Get all enrolled student IDs for this course
+  const enrollments = await Enrollment.find({ courseId: course._id }).select('studentId');
+  const enrolledStudentIds = enrollments.map(e => e.studentId.toString());
+
+  // Build query: find students not enrolled, with optional search on name/email
+  const query = {};
+  if (search) {
+    const searchRegex = new RegExp(search, 'i');
+    query.$or = [
+      { name: searchRegex },
+      { email: searchRegex }
+    ];
+  }
+  query.role = 'student';
+
+  // Find users, populate student info, filter out enrolled ones
+  const users = await User.find(query).sort({ createdAt: -1 });
+  
+  const unenrolledStudents = [];
+  for (const user of users) {
+    const student = await Student.findOne({ userId: user._id });
+    if (student && !enrolledStudentIds.includes(student._id.toString())) {
+      unenrolledStudents.push({
+        id: user._id,
+        studentId: student._id,
+        name: user.name,
+        email: user.email,
+        studentNumber: student.studentNumber,
+        createdAt: user.createdAt
+      });
+    }
+  }
+
+  res.json({ success: true, data: unenrolledStudents });
+}
+
 // POST /api/courses
 async function createCourse(req, res) {
   const { code, name, lecturerId, credits, semester, academicYear } = req.body;
@@ -88,5 +130,5 @@ async function enrollStudent(req, res) {
 }
 
 module.exports = {
-  listCourses, myCourses, enrolledCourses, createCourse, updateCourse, deleteCourse, enrollStudent
+  listCourses, myCourses, enrolledCourses, createCourse, updateCourse, deleteCourse, enrollStudent, getUnenrolledStudents
 };

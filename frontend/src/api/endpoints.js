@@ -25,7 +25,8 @@ export const courseApi = {
   create: (payload) => client.post('/courses', payload),
   update: (id, payload) => client.put(`/courses/${id}`, payload),
   remove: (id) => client.delete(`/courses/${id}`),
-  enroll: (id, email) => client.post(`/courses/${id}/enroll`, { email })
+  enroll: (id, email) => client.post(`/courses/${id}/enroll`, { email }),
+  getUnenrolledStudents: (id, search) => client.get(`/courses/${id}/unenrolled-students`, { params: { search } })
 };
 
 export const attendanceApi = {
