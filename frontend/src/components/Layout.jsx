@@ -64,7 +64,7 @@ export default function Layout({ children }) {
                 `block rounded-2xl px-4 py-3 text-sm font-semibold transition-all ${
                   isActive
                     ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-lg shadow-primary-500/25'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-soft'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-md'
                 }`
               }
             >
