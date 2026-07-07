@@ -7,45 +7,45 @@ html, body, #root {
 }
 
 body {
-  @apply text-gray-800 dark:text-gray-100 antialiased bg-gray-50 dark:bg-gray-950;
+  @apply text-gray-800 dark:text-cream-100 antialiased bg-cream-50 dark:bg-gray-900;
 }
 
 .card {
-  @apply bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-800;
+  @apply bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-cream-200 dark:border-gray-700;
 }
 
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-cream-50 dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-primary {
-  @apply btn bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 focus:ring-primary-500 shadow-lg shadow-primary-500/25;
+  @apply btn bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 focus:ring-primary-500 shadow-xl shadow-primary-500/20;
 }
 
 .btn-secondary {
-  @apply btn bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 focus:ring-gray-400;
+  @apply btn bg-cream-100 dark:bg-gray-700 text-gray-700 dark:text-cream-100 border border-cream-300 dark:border-gray-600 hover:bg-cream-200 dark:hover:bg-gray-600 focus:ring-primary-400;
 }
 
 .btn-danger {
-  @apply btn bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 focus:ring-red-500 shadow-lg shadow-red-500/25;
+  @apply btn bg-gradient-to-r from-red-500 to-rose-600 text-white hover:from-red-600 hover:to-rose-700 focus:ring-red-500 shadow-xl shadow-red-500/20;
 }
 
 .input {
-  @apply w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all;
+  @apply w-full rounded-xl border border-cream-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all;
 }
 
 .label {
-  @apply block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5;
+  @apply block text-sm font-semibold text-gray-700 dark:text-cream-200 mb-1.5;
 }
 
 .badge {
   @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-bold;
 }
-.badge-good { @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300; }
-.badge-warning { @apply badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300; }
-.badge-risk { @apply badge bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300; }
+.badge-good { @apply badge bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-200; }
+.badge-warning { @apply badge bg-accent-100 text-accent-800 dark:bg-accent-900/30 dark:text-accent-200; }
+.badge-risk { @apply badge bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-200; }
 
-/* Modern gradient background for pages */
+/* Warm gradient background for pages */
 .page-gradient {
-  @apply bg-gradient-to-br from-gray-50 via-primary-50/30 to-gray-50 dark:from-gray-950 dark:via-primary-900/10 dark:to-gray-950;
+  @apply bg-gradient-to-br from-cream-50 via-primary-50/20 to-cream-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900;
 }

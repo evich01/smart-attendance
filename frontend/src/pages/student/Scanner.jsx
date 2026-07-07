@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
 import { useNavigate } from 'react-router-dom';
+import { RefreshCw, ArrowLeft, Scan, CheckCircle2 } from 'lucide-react';
 import Layout from '../../components/Layout.jsx';
 import { attendanceApi } from '../../api/endpoints';
 
@@ -126,48 +127,75 @@ export default function Scanner() {
     await submitScan(manualSessionId.trim(), manualToken.trim());
   }
 
+  // Determine status colors
+  const getStatusClasses = () => {
+    switch(status) {
+      case 'idle':
+        return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-cream-200';
+      case 'scanning':
+        return 'bg-primary-50 text-primary-800 dark:bg-primary-900/20 dark:text-primary-200';
+      case 'processing':
+        return 'bg-accent-50 text-accent-800 dark:bg-accent-900/20 dark:text-accent-200';
+      case 'success':
+        return 'bg-primary-50 text-primary-800 dark:bg-primary-900/20 dark:text-primary-200';
+      case 'error':
+        return 'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+      default:
+        return 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-cream-200';
+    }
+  };
+
   return (
     <Layout key={componentKey}>
       <h1 className="text-2xl font-bold mb-6">Scan QR Code</h1>
 
-      <div className={`rounded-lg px-4 py-3 text-sm font-medium mb-4 ${
-        status === 'idle' ? 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300' :
-        status === 'scanning' ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
-        status === 'processing' ? 'bg-yellow-50 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
-        status === 'success' ? 'bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
-        'bg-red-50 text-red-700 dark:bg-red-900/30 dark:text-red-300'
-      }`} role="status">
+      <div className={`rounded-2xl px-5 py-3 text-sm font-semibold mb-4 flex items-center gap-2 ${getStatusClasses()}`} role="status">
+        {status === 'idle' && <Scan size={18} />}
+        {status === 'scanning' && <Scan size={18} className="animate-pulse" />}
+        {status === 'success' && <CheckCircle2 size={18} />}
         {status === 'idle' ? 'Ready to scan' :
          status === 'scanning' ? 'Scanning… point your camera at the QR code' :
          status === 'processing' ? 'Processing…' :
-         status === 'success' ? message : message}
+         message}
       </div>
 
       <div className="card p-4 max-w-md mx-auto">
-        <div id={SCANNER_ELEMENT_ID} className="w-full rounded-lg overflow-hidden" style={{ minHeight: '300px', backgroundColor: '#000' }} />
+        <div id={SCANNER_ELEMENT_ID} className="w-full rounded-2xl overflow-hidden" style={{ minHeight: '300px', backgroundColor: '#000' }} />
         {status === 'success' && (
           <div className="mt-4 flex gap-2">
-            <button className="btn-primary flex-1" onClick={resetScanner}>Scan Another</button>
-            <button className="btn-secondary flex-1" onClick={() => navigate('/student')}>Back to Dashboard</button>
+            <button className="btn-primary flex-1 flex items-center justify-center gap-2" onClick={resetScanner}>
+              <RefreshCw size={18} />
+              Scan Another
+            </button>
+            <button className="btn-secondary flex-1 flex items-center justify-center gap-2" onClick={() => navigate('/student')}>
+              <ArrowLeft size={18} />
+              Back
+            </button>
           </div>
         )}
         {status === 'error' && (
           <div className="mt-4 flex gap-2">
-            <button className="btn-primary flex-1" onClick={resetScanner}>Retry Camera</button>
-            <button className="btn-secondary flex-1" onClick={() => navigate('/student')}>Back to Dashboard</button>
+            <button className="btn-primary flex-1 flex items-center justify-center gap-2" onClick={resetScanner}>
+              <RefreshCw size={18} />
+              Retry
+            </button>
+            <button className="btn-secondary flex-1 flex items-center justify-center gap-2" onClick={() => navigate('/student')}>
+              <ArrowLeft size={18} />
+              Back
+            </button>
           </div>
         )}
       </div>
 
       <div className="max-w-md mx-auto mt-4">
         <button
-          className="text-sm text-primary-600 font-medium"
+          className="text-sm text-primary-600 font-bold hover:text-primary-700 transition-colors flex items-center gap-1"
           onClick={() => setManualOpen((o) => !o)}
         >
-          {manualOpen ? '▾ Hide manual entry' : '▸ Can\'t use the camera? Enter code manually'}
+          {manualOpen ? 'Hide manual entry' : 'Can\'t use the camera? Enter code manually'}
         </button>
         {manualOpen && (
-          <form onSubmit={handleManualSubmit} className="card p-4 mt-2 space-y-3">
+          <form onSubmit={handleManualSubmit} className="card p-5 mt-3 space-y-4">
             <div>
               <label className="label">Session ID</label>
               <input required className="input" value={manualSessionId} onChange={(e) => setManualSessionId(e.target.value)} />
