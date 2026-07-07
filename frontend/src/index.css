@@ -7,40 +7,45 @@ html, body, #root {
 }
 
 body {
-  @apply text-gray-900 dark:text-gray-100 antialiased;
+  @apply text-gray-800 dark:text-gray-100 antialiased bg-gray-50 dark:bg-gray-950;
 }
 
 .card {
-  @apply bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700;
+  @apply bg-white dark:bg-gray-900 rounded-2xl shadow-card border border-gray-100 dark:border-gray-800;
 }
 
 .btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-950 disabled:opacity-50 disabled:cursor-not-allowed;
 }
 
 .btn-primary {
-  @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  @apply btn bg-gradient-to-r from-primary-600 to-primary-700 text-white hover:from-primary-700 hover:to-primary-800 focus:ring-primary-500 shadow-lg shadow-primary-500/25;
 }
 
 .btn-secondary {
-  @apply btn bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-200 dark:hover:bg-gray-600 focus:ring-gray-400;
+  @apply btn bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 focus:ring-gray-400;
 }
 
 .btn-danger {
-  @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+  @apply btn bg-gradient-to-r from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 focus:ring-red-500 shadow-lg shadow-red-500/25;
 }
 
 .input {
-  @apply w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500;
+  @apply w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all;
 }
 
 .label {
-  @apply block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1;
+  @apply block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5;
 }
 
 .badge {
-  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold;
+  @apply inline-flex items-center rounded-full px-3 py-1 text-xs font-bold;
 }
-.badge-good { @apply badge bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200; }
-.badge-warning { @apply badge bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200; }
-.badge-risk { @apply badge bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200; }
+.badge-good { @apply badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300; }
+.badge-warning { @apply badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300; }
+.badge-risk { @apply badge bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300; }
+
+/* Modern gradient background for pages */
+.page-gradient {
+  @apply bg-gradient-to-br from-gray-50 via-primary-50/30 to-gray-50 dark:from-gray-950 dark:via-primary-900/10 dark:to-gray-950;
+}
