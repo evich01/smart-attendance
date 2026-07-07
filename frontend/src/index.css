@@ -31,7 +31,7 @@ body {
 }
 
 .input {
-  @apply w-full rounded-xl border border-cream-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all;
+  @apply w-full rounded-xl border border-cream-300 dark:border-gray-600 bg-white dark:bg-gray-800 pl-10 pr-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all;
 }
 
 .label {
