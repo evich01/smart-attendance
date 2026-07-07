@@ -1,8 +1,16 @@
-require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const path = require('path');
+
+// Load .env.local if exists (local dev)
+const localEnvPath = path.join(__dirname, '../.env.local');
+if (fs.existsSync(localEnvPath)) {
+  require('dotenv').config({ path: localEnvPath });
+} else {
+  require('dotenv').config();
+}
 const connectDB = require('./config/db');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 
