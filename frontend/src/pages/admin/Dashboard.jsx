@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import Layout from '../../components/Layout.jsx';
 import { userApi } from '../../api/endpoints';
+
+const COLORS = ['#2563eb', '#16a34a', '#f59e0b']; // Blue for Admin, Green for Lecturer, Amber for Student
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -12,6 +15,13 @@ export default function AdminDashboard() {
       .catch((err) => setError(err.response?.data?.error || 'Failed to load stats'));
   }, []);
 
+  // Prepare data for chart
+  const userRoleData = stats ? [
+    { name: 'Admins', value: stats.usersByRole.admin, fill: COLORS[0] },
+    { name: 'Lecturers', value: stats.usersByRole.lecturer, fill: COLORS[1] },
+    { name: 'Students', value: stats.usersByRole.student, fill: COLORS[2] }
+  ] : [];
+
   return (
     <Layout>
       <h1 className="text-2xl font-bold mb-6">Administrator Dashboard</h1>
@@ -19,24 +29,90 @@ export default function AdminDashboard() {
       {!stats ? (
         <p className="text-gray-500">Loading…</p>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Admins" value={stats.usersByRole.admin} />
-          <StatCard label="Lecturers" value={stats.usersByRole.lecturer} />
-          <StatCard label="Students" value={stats.usersByRole.student} />
-          <StatCard label="Total Users" value={stats.totalUsers} />
-          <StatCard label="Sessions" value={stats.totalSessions} />
-          <StatCard label="Attendance Records" value={stats.totalAttendanceRecords} />
-        </div>
+        <>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <StatCard label="Admins" value={stats.usersByRole.admin} color="primary" />
+            <StatCard label="Lecturers" value={stats.usersByRole.lecturer} color="success" />
+            <StatCard label="Students" value={stats.usersByRole.student} color="amber" />
+            <StatCard label="Total Users" value={stats.totalUsers} />
+            <StatCard label="Sessions" value={stats.totalSessions} />
+            <StatCard label="Attendance Records" value={stats.totalAttendanceRecords} />
+          </div>
+
+          {/* Chart Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="card p-5">
+              <h2 className="font-semibold mb-3">User Distribution by Role</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={userRoleData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    dataKey="value"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {userRoleData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Empty space or could add another chart later */}
+            <div className="card p-5">
+              <h2 className="font-semibold mb-3">Quick Overview</h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[0] }} />
+                    <span className="text-sm">Admins</span>
+                  </div>
+                  <span className="font-bold">{stats.usersByRole.admin}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[1] }} />
+                    <span className="text-sm">Lecturers</span>
+                  </div>
+                  <span className="font-bold">{stats.usersByRole.lecturer}</span>
+                </div>
+                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[2] }} />
+                    <span className="text-sm">Students</span>
+                  </div>
+                  <span className="font-bold">{stats.usersByRole.student}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
       )}
     </Layout>
   );
 }
 
-function StatCard({ label, value }) {
+function StatCard({ label, value, color }) {
+  let colorClasses = 'text-gray-900 dark:text-gray-100';
+  
+  if (color === 'primary') {
+    colorClasses = 'text-primary-600 dark:text-primary-400';
+  } else if (color === 'success') {
+    colorClasses = 'text-green-600 dark:text-green-400';
+  } else if (color === 'amber') {
+    colorClasses = 'text-amber-600 dark:text-amber-400';
+  }
+
   return (
     <div className="card p-5">
       <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-      <p className="text-3xl font-bold mt-1">{value}</p>
+      <p className={`text-3xl font-bold mt-1 ${colorClasses}`}>{value}</p>
     </div>
   );
 }
