@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, UserCircle, CreditCard, Loader2 } from 'lucide-react';
+import { User, Mail, Lock, UserCircle, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 
 export default function Register() {
   const { register, loading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: '', email: '', password: '', role: 'student', staffId: '', department: ''
+    name: '', email: '', password: '', role: 'student', department: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -83,16 +83,6 @@ export default function Register() {
               </select>
             </div>
           </div>
-
-          {form.role === 'lecturer' && (
-            <div>
-              <label htmlFor="staffId" className="label">Staff ID</label>
-              <div className="relative">
-                <CreditCard size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input id="staffId" required className="input pl-10" value={form.staffId} onChange={(e) => update('staffId', e.target.value)} disabled={success} placeholder="STF-001" />
-              </div>
-            </div>
-          )}
 
           <button type="submit" disabled={loading || success} className="btn-primary w-full text-base py-3">
             {loading ? (

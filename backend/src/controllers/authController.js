@@ -36,6 +36,17 @@ async function generateStudentNumber() {
   return `STU-${String(newNumber).padStart(3, '0')}`;
 }
 
+// Helper function to generate staff ID
+async function generateStaffId() {
+  const lastLecturer = await Lecturer.findOne().sort({ staffId: -1 });
+  if (!lastLecturer) {
+    return 'STF-001';
+  }
+  const lastNumber = parseInt(lastLecturer.staffId.split('-')[1], 10);
+  const newNumber = lastNumber + 1;
+  return `STF-${String(newNumber).padStart(3, '0')}`;
+}
+
 // POST /api/auth/register
 async function register(req, res) {
   const { name, email, password, role, studentNumber, staffId, department, yearLevel, program, specialisation } = req.body;
@@ -62,10 +73,11 @@ async function register(req, res) {
     }
     await Student.create({ userId: user._id, studentNumber: finalStudentNumber, department, yearLevel, program });
   } else if (role === 'lecturer') {
-    if (!staffId) {
-      return res.status(400).json({ success: false, error: 'staffId is required for lecturer registration' });
+    let finalStaffId = staffId;
+    if (!finalStaffId) {
+      finalStaffId = await generateStaffId();
     }
-    await Lecturer.create({ userId: user._id, staffId, department, specialisation });
+    await Lecturer.create({ userId: user._id, staffId: finalStaffId, department, specialisation });
   }
 
   await logAction({ userId: user._id, action: 'REGISTER', details: `role=${role}`, req });
