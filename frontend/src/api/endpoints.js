@@ -26,7 +26,9 @@ export const courseApi = {
   update: (id, payload) => client.put(`/courses/${id}`, payload),
   remove: (id) => client.delete(`/courses/${id}`),
   enroll: (id, email) => client.post(`/courses/${id}/enroll`, { email }),
-  getUnenrolledStudents: (id, search) => client.get(`/courses/${id}/unenrolled-students`, { params: { search } })
+  getUnenrolledStudents: (id, search) => client.get(`/courses/${id}/unenrolled-students`, { params: { search } }),
+  getEnrolledStudents: (id) => client.get(`/courses/${id}/enrolled-students`),
+  unenrollStudent: (courseId, studentId) => client.delete(`/courses/${courseId}/enroll/${studentId}`)
 };
 
 export const attendanceApi = {

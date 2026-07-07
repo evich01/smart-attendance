@@ -129,6 +129,44 @@ async function enrollStudent(req, res) {
   res.status(201).json({ success: true, data: enrollment });
 }
 
+// DELETE /api/courses/:id/enroll/:studentId — unenrol a student from a course
+async function unenrollStudent(req, res) {
+  const course = await Course.findById(req.params.id);
+  if (!course) return res.status(404).json({ success: false, error: 'Course not found' });
+
+  const enrollment = await Enrollment.findOneAndDelete({ 
+    studentId: req.params.studentId, 
+    courseId: course._id 
+  });
+  
+  if (!enrollment) return res.status(404).json({ success: false, error: 'Enrollment not found' });
+
+  res.json({ success: true, data: { message: 'Student unenrolled successfully' } });
+}
+
+// GET /api/courses/:id/enrolled-students — get list of enrolled students
+async function getEnrolledStudents(req, res) {
+  const course = await Course.findById(req.params.id);
+  if (!course) return res.status(404).json({ success: false, error: 'Course not found' });
+
+  const enrollments = await Enrollment.find({ courseId: course._id })
+    .populate({
+      path: 'studentId',
+      populate: { path: 'userId', select: 'name email' }
+    });
+
+  const enrolledStudents = enrollments.map(enrollment => ({
+    id: enrollment.studentId.userId._id,
+    studentId: enrollment.studentId._id,
+    name: enrollment.studentId.userId.name,
+    email: enrollment.studentId.userId.email,
+    studentNumber: enrollment.studentId.studentNumber,
+    enrolledAt: enrollment.enrolledAt
+  }));
+
+  res.json({ success: true, data: enrolledStudents });
+}
+
 module.exports = {
-  listCourses, myCourses, enrolledCourses, createCourse, updateCourse, deleteCourse, enrollStudent, getUnenrolledStudents
+  listCourses, myCourses, enrolledCourses, createCourse, updateCourse, deleteCourse, enrollStudent, getUnenrolledStudents, unenrollStudent, getEnrolledStudents
 };

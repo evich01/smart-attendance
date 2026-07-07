@@ -11,6 +11,7 @@ export default function Courses() {
   const [enrollModal, setEnrollModal] = useState(null); // course being enrolled into
   const [enrollEmail, setEnrollEmail] = useState('');
   const [unenrolledStudents, setUnenrolledStudents] = useState([]);
+  const [enrolledStudents, setEnrolledStudents] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(EMPTY_FORM);
@@ -38,11 +39,19 @@ export default function Courses() {
       .catch(err => setError(err.response?.data?.error || 'Failed to load students'));
   }, [enrollModal, searchQuery]);
 
+  const loadEnrolledStudents = useCallback(() => {
+    if (!enrollModal) return;
+    courseApi.getEnrolledStudents(enrollModal._id)
+      .then(res => setEnrolledStudents(res.data.data))
+      .catch(err => setError(err.response?.data?.error || 'Failed to load students'));
+  }, [enrollModal]);
+
   useEffect(() => {
     if (enrollModal) {
       loadUnenrolledStudents();
+      loadEnrolledStudents();
     }
-  }, [enrollModal, loadUnenrolledStudents]);
+  }, [enrollModal, loadUnenrolledStudents, loadEnrolledStudents]);
 
   function openCreate() {
     setEditing(null);
@@ -93,6 +102,7 @@ export default function Courses() {
       setNotice(`Enrolled ${enrollEmail} successfully.`);
       setEnrollEmail('');
       loadUnenrolledStudents();
+      loadEnrolledStudents();
     } catch (err) {
       setError(err.response?.data?.error || 'Enrollment failed');
     }
@@ -104,8 +114,22 @@ export default function Courses() {
       await courseApi.enroll(enrollModal._id, student.email);
       setNotice(`Enrolled ${student.email} successfully.`);
       loadUnenrolledStudents();
+      loadEnrolledStudents();
     } catch (err) {
       setError(err.response?.data?.error || 'Enrollment failed');
+    }
+  }
+
+  async function handleUnenroll(student) {
+    if (!window.confirm(`Are you sure you want to unenroll ${student.name} from this course?`)) return;
+    setError(''); setNotice('');
+    try {
+      await courseApi.unenrollStudent(enrollModal._id, student.studentId);
+      setNotice(`Unenrolled ${student.email} successfully.`);
+      loadUnenrolledStudents();
+      loadEnrolledStudents();
+    } catch (err) {
+      setError(err.response?.data?.error || 'Unenrollment failed');
     }
   }
 
@@ -135,7 +159,7 @@ export default function Courses() {
                 <td className="p-3">{c.semester} {c.academicYear}</td>
                 <td className="p-3 space-x-2 whitespace-nowrap">
                   <button className="text-primary-600 hover:underline" onClick={() => openEdit(c)}>Edit</button>
-                  <button className="text-primary-600 hover:underline" onClick={() => { setEnrollModal(c); setNotice(''); setSearchQuery(''); }}>Enrol</button>
+                  <button className="text-primary-600 hover:underline" onClick={() => { setEnrollModal(c); setNotice(''); setSearchQuery(''); }}>Manage Enrollments</button>
                   <button className="text-red-600 hover:underline" onClick={() => handleDelete(c._id)}>Delete</button>
                 </td>
               </tr>
@@ -200,57 +224,92 @@ export default function Courses() {
 
       {enrollModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="card w-full max-w-md p-6 max-h-[80vh] flex flex-col">
-            <h2 className="text-lg font-bold mb-1">Enrol Student</h2>
-            <p className="text-sm text-gray-500 mb-4">into {enrollModal.code} — {enrollModal.name}</p>
+          <div className="card w-full max-w-2xl p-6 max-h-[85vh] flex flex-col">
+            <h2 className="text-lg font-bold mb-1">Manage Enrollments</h2>
+            <p className="text-sm text-gray-500 mb-4">for {enrollModal.code} — {enrollModal.name}</p>
             {notice && <p className="text-green-600 text-sm mb-2">{notice}</p>}
             {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
             
-            <div className="mb-3">
-              <label className="label">Search Students</label>
-              <input 
-                className="input" 
-                placeholder="Search by name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+              {/* Enrolled Students */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col">
+                <h3 className="font-semibold mb-3">Enrolled Students ({enrolledStudents.length})</h3>
+                <div className="flex-1 overflow-y-auto max-h-48">
+                  {enrolledStudents.length === 0 ? (
+                    <div className="p-2 text-center text-gray-500 text-sm">No students enrolled yet.</div>
+                  ) : (
+                    enrolledStudents.map(student => (
+                      <div 
+                        key={student.id} 
+                        className="flex items-center justify-between p-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                      >
+                        <div>
+                          <p className="font-medium text-sm">{student.name}</p>
+                          <p className="text-xs text-gray-500">{student.email} · {student.studentNumber}</p>
+                        </div>
+                        <button 
+                          className="text-red-600 hover:underline text-xs"
+                          onClick={() => handleUnenroll(student)}
+                        >
+                          Unenroll
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
 
-            <div className="flex-1 overflow-y-auto mb-4 max-h-60 border border-gray-200 dark:border-gray-700 rounded-lg">
-              {unenrolledStudents.length === 0 ? (
-                <div className="p-4 text-center text-gray-500">No unenrolled students found.</div>
-              ) : (
-                unenrolledStudents.map(student => (
-                  <div 
-                    key={student.id} 
-                    className="flex items-center justify-between p-3 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
-                    onClick={() => setEnrollEmail(student.email)}
-                  >
-                    <div>
-                      <p className="font-medium">{student.name}</p>
-                      <p className="text-sm text-gray-500">{student.email} · {student.studentNumber}</p>
-                    </div>
-                    <button 
-                      className="btn-primary text-sm px-3 py-1"
-                      onClick={(e) => { e.stopPropagation(); handleQuickEnroll(student); }}
-                    >
-                      Enrol
-                    </button>
+              {/* Unenrolled Students */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col">
+                <h3 className="font-semibold mb-3">Enroll New Students</h3>
+                <div className="mb-3">
+                  <input 
+                    className="input text-sm" 
+                    placeholder="Search by name or email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+                <div className="flex-1 overflow-y-auto max-h-48 mb-3">
+                  {unenrolledStudents.length === 0 ? (
+                    <div className="p-2 text-center text-gray-500 text-sm">No unenrolled students found.</div>
+                  ) : (
+                    unenrolledStudents.map(student => (
+                      <div 
+                        key={student.id} 
+                        className="flex items-center justify-between p-2 border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                        onClick={() => setEnrollEmail(student.email)}
+                      >
+                        <div>
+                          <p className="font-medium text-sm">{student.name}</p>
+                          <p className="text-xs text-gray-500">{student.email} · {student.studentNumber}</p>
+                        </div>
+                        <button 
+                          className="btn-primary text-xs px-2 py-1"
+                          onClick={(e) => { e.stopPropagation(); handleQuickEnroll(student); }}
+                        >
+                          Enroll
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Manual Email Entry */}
+                <form onSubmit={handleEnroll} className="space-y-2">
+                  <div>
+                    <input required type="email" className="input text-sm" placeholder="Or enter email manually..." value={enrollEmail} onChange={(e) => setEnrollEmail(e.target.value)} />
                   </div>
-                ))
-              )}
+                  <div className="flex gap-2">
+                    <button type="submit" className="btn-primary flex-1 text-sm">Enroll</button>
+                  </div>
+                </form>
+              </div>
             </div>
 
-            <form onSubmit={handleEnroll} className="space-y-3">
-              <div>
-                <label className="label">Or Enter Email Manually</label>
-                <input required type="email" className="input" value={enrollEmail} onChange={(e) => setEnrollEmail(e.target.value)} />
-              </div>
-              <div className="flex gap-2 pt-2">
-                <button type="submit" className="btn-primary flex-1">Enrol</button>
-                <button type="button" className="btn-secondary flex-1" onClick={() => setEnrollModal(null)}>Close</button>
-              </div>
-            </form>
+            <div className="mt-4 flex justify-end">
+              <button type="button" className="btn-secondary" onClick={() => setEnrollModal(null)}>Close</button>
+            </div>
           </div>
         </div>
       )}
