@@ -142,13 +142,33 @@ async function userStats(req, res) {
     AttendanceRecord.countDocuments({})
   ]);
 
+  // Last 7 days registration trend
+  const since = new Date();
+  since.setDate(since.getDate() - 6);
+  since.setHours(0, 0, 0, 0);
+
+  const registrations = await User.find({ createdAt: { $gte: since } }).select('createdAt');
+  const regTrendMap = {};
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(since);
+    d.setDate(d.getDate() + i);
+    const key = d.toISOString().slice(0, 10);
+    regTrendMap[key] = 0;
+  }
+  registrations.forEach((r) => {
+    const key = r.createdAt.toISOString().slice(0, 10);
+    if (regTrendMap[key] !== undefined) regTrendMap[key] += 1;
+  });
+  const registrationTrend = Object.entries(regTrendMap).map(([date, count]) => ({ date, count }));
+
   res.json({
     success: true,
     data: {
       usersByRole: { admin: totalAdmins, lecturer: totalLecturers, student: totalStudents },
       totalUsers: totalAdmins + totalLecturers + totalStudents,
       totalSessions,
-      totalAttendanceRecords: totalAttendance
+      totalAttendanceRecords: totalAttendance,
+      registrationTrend
     }
   });
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip, AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts';
 import Layout from '../../components/Layout.jsx';
 import { userApi } from '../../api/endpoints';
 
@@ -64,32 +64,17 @@ export default function AdminDashboard() {
               </ResponsiveContainer>
             </div>
 
-            {/* Empty space or could add another chart later */}
             <div className="card p-5">
-              <h2 className="font-semibold mb-3">Quick Overview</h2>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[0] }} />
-                    <span className="text-sm">Admins</span>
-                  </div>
-                  <span className="font-bold">{stats.usersByRole.admin}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[1] }} />
-                    <span className="text-sm">Lecturers</span>
-                  </div>
-                  <span className="font-bold">{stats.usersByRole.lecturer}</span>
-                </div>
-                <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[2] }} />
-                    <span className="text-sm">Students</span>
-                  </div>
-                  <span className="font-bold">{stats.usersByRole.student}</span>
-                </div>
-              </div>
+              <h2 className="font-semibold mb-3">Last 7 Days Registrations</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={stats.registrationTrend}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} tickFormatter={(d) => d.slice(5)} />
+                  <YAxis allowDecimals={false} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="count" stroke="#2563eb" fill="#2563eb" fillOpacity={0.25} />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </>
