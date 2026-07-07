@@ -7,6 +7,26 @@ const AttendanceRecord = require('../models/AttendanceRecord');
 
 const BCRYPT_ROUNDS = 12;
 
+async function generateStudentNumber() {
+  const lastStudent = await Student.findOne().sort({ studentNumber: -1 });
+  if (!lastStudent) {
+    return 'STU-001';
+  }
+  const lastNumber = parseInt(lastStudent.studentNumber.split('-')[1], 10);
+  const newNumber = lastNumber + 1;
+  return `STU-${String(newNumber).padStart(3, '0')}`;
+}
+
+async function generateStaffId() {
+  const lastLecturer = await Lecturer.findOne().sort({ staffId: -1 });
+  if (!lastLecturer) {
+    return 'STF-001';
+  }
+  const lastNumber = parseInt(lastLecturer.staffId.split('-')[1], 10);
+  const newNumber = lastNumber + 1;
+  return `STF-${String(newNumber).padStart(3, '0')}`;
+}
+
 // GET /api/users?search=&role=&page=&limit=
 async function listUsers(req, res) {
   const { search = '', role = '', page = 1, limit = 10 } = req.query;
@@ -54,7 +74,7 @@ async function listLecturers(req, res) {
 
 // POST /api/users
 async function createUser(req, res) {
-  const { name, email, password, role, studentNumber, staffId, department, yearLevel, program, specialisation } = req.body;
+  const { name, email, password, role, department, yearLevel, program, specialisation } = req.body;
   if (!name || !email || !password || !role) {
     return res.status(400).json({ success: false, error: 'name, email, password, and role are required' });
   }
@@ -65,10 +85,12 @@ async function createUser(req, res) {
   const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
   const user = await User.create({ name, email: email.toLowerCase(), passwordHash, role });
 
-  if (role === 'student' && studentNumber) {
-    await Student.create({ userId: user._id, studentNumber, department, yearLevel, program });
-  } else if (role === 'lecturer' && staffId) {
-    await Lecturer.create({ userId: user._id, staffId, department, specialisation });
+  if (role === 'student') {
+    const finalStudentNumber = await generateStudentNumber();
+    await Student.create({ userId: user._id, studentNumber: finalStudentNumber, department, yearLevel, program });
+  } else if (role === 'lecturer') {
+    const finalStaffId = await generateStaffId();
+    await Lecturer.create({ userId: user._id, staffId: finalStaffId, department, specialisation });
   }
 
   res.status(201).json({ success: true, data: { id: user._id, name: user.name, email: user.email, role: user.role } });

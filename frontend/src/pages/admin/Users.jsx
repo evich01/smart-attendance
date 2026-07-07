@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import Layout from '../../components/Layout.jsx';
 import { userApi } from '../../api/endpoints';
 
-const EMPTY_FORM = { name: '', email: '', password: '', role: 'student', studentNumber: '', staffId: '' };
+const EMPTY_FORM = { name: '', email: '', password: '', role: 'student' };
 
 export default function Users() {
   const [users, setUsers] = useState([]);
@@ -31,7 +31,7 @@ export default function Users() {
 
   function openEdit(user) {
     setEditing(user);
-    setForm({ name: user.name, email: user.email, password: '', role: user.role, studentNumber: '', staffId: '' });
+    setForm({ name: user.name, email: user.email, password: '', role: user.role });
     setModalOpen(true);
   }
 
@@ -153,18 +153,6 @@ export default function Users() {
                       <option value="admin">Admin</option>
                     </select>
                   </div>
-                  {form.role === 'student' && (
-                    <div>
-                      <label className="label">Student Number</label>
-                      <input className="input" value={form.studentNumber} onChange={(e) => setForm({ ...form, studentNumber: e.target.value })} />
-                    </div>
-                  )}
-                  {form.role === 'lecturer' && (
-                    <div>
-                      <label className="label">Staff ID</label>
-                      <input className="input" value={form.staffId} onChange={(e) => setForm({ ...form, staffId: e.target.value })} />
-                    </div>
-                  )}
                 </>
               )}
               <div className="flex gap-2 pt-2">
