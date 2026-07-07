@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Mail, Lock, UserCircle, IDCard, Loader2 } from 'lucide-react';
+import { User, Mail, Lock, UserCircle, CreditCard, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 
 export default function Register() {
@@ -88,7 +88,7 @@ export default function Register() {
             <div>
               <label htmlFor="studentNumber" className="label">Student number</label>
               <div className="relative">
-                <IDCard size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <CreditCard size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input id="studentNumber" required className="input pl-10" value={form.studentNumber} onChange={(e) => update('studentNumber', e.target.value)} disabled={success} placeholder="STU-001" />
               </div>
             </div>
@@ -97,7 +97,7 @@ export default function Register() {
             <div>
               <label htmlFor="staffId" className="label">Staff ID</label>
               <div className="relative">
-                <IDCard size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <CreditCard size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input id="staffId" required className="input pl-10" value={form.staffId} onChange={(e) => update('staffId', e.target.value)} disabled={success} placeholder="STF-001" />
               </div>
             </div>
