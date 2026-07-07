@@ -7,7 +7,7 @@ export default function Register() {
   const { register, loading } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    name: '', email: '', password: '', role: 'student', studentNumber: '', staffId: '', department: ''
+    name: '', email: '', password: '', role: 'student', staffId: '', department: ''
   });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
@@ -46,7 +46,7 @@ export default function Register() {
         )}
 
         {error && (
-          <div role="alert" className="mb-6 text-sm text-red-700 bg-red-50 dark:bg-red-900/20 dark:text-red-200 rounded-2xl px-4 py-3 border border-red-100 dark:border-red-800/30">
+          <div role="alert" className="mb-6 text-sm text-red-700 bg-red-50 dark:bg-red-900/20 dark:text-red-300 rounded-2xl px-4 py-3 border border-red-100 dark:border-red-800/30">
             {error}
           </div>
         )}
@@ -84,15 +84,6 @@ export default function Register() {
             </div>
           </div>
 
-          {form.role === 'student' && (
-            <div>
-              <label htmlFor="studentNumber" className="label">Student number</label>
-              <div className="relative">
-                <CreditCard size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input id="studentNumber" required className="input pl-10" value={form.studentNumber} onChange={(e) => update('studentNumber', e.target.value)} disabled={success} placeholder="STU-001" />
-              </div>
-            </div>
-          )}
           {form.role === 'lecturer' && (
             <div>
               <label htmlFor="staffId" className="label">Staff ID</label>

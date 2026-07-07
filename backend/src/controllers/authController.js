@@ -25,6 +25,17 @@ function sanitizeUser(user) {
   };
 }
 
+// Helper function to generate student number
+async function generateStudentNumber() {
+  const lastStudent = await Student.findOne().sort({ studentNumber: -1 });
+  if (!lastStudent) {
+    return 'STU-001';
+  }
+  const lastNumber = parseInt(lastStudent.studentNumber.split('-')[1], 10);
+  const newNumber = lastNumber + 1;
+  return `STU-${String(newNumber).padStart(3, '0')}`;
+}
+
 // POST /api/auth/register
 async function register(req, res) {
   const { name, email, password, role, studentNumber, staffId, department, yearLevel, program, specialisation } = req.body;
@@ -45,10 +56,11 @@ async function register(req, res) {
   const user = await User.create({ name, email: email.toLowerCase(), passwordHash, role });
 
   if (role === 'student') {
-    if (!studentNumber) {
-      return res.status(400).json({ success: false, error: 'studentNumber is required for student registration' });
+    let finalStudentNumber = studentNumber;
+    if (!finalStudentNumber) {
+      finalStudentNumber = await generateStudentNumber();
     }
-    await Student.create({ userId: user._id, studentNumber, department, yearLevel, program });
+    await Student.create({ userId: user._id, studentNumber: finalStudentNumber, department, yearLevel, program });
   } else if (role === 'lecturer') {
     if (!staffId) {
       return res.status(400).json({ success: false, error: 'staffId is required for lecturer registration' });
