@@ -4,10 +4,15 @@ const Enrollment = require('../models/Enrollment');
 const Lecturer = require('../models/Lecturer');
 const Student = require('../models/Student');
 const Course = require('../models/Course');
+const Setting = require('../models/Setting');
 const { generateQrDataUrl } = require('../utils/qrGenerator');
 const { generateSessionToken, computeExpiresAt, getQrExpirySeconds } = require('../utils/tokenGenerator');
 
-function getLateThresholdMinutes() {
+async function getLateThresholdMinutes() {
+  const setting = await Setting.findOne({ key: 'lateThresholdMinutes' });
+  if (setting) {
+    return parseInt(setting.value, 10) || 15;
+  }
   return parseInt(process.env.LATE_THRESHOLD_MINUTES, 10) || 15;
 }
 
@@ -24,7 +29,8 @@ async function createSession(req, res) {
   if (!course) return res.status(403).json({ success: false, error: 'You are not assigned to this course' });
 
   const token = generateSessionToken();
-  const expiresAt = computeExpiresAt();
+  const expiresAt = await computeExpiresAt();
+  const qrExpirySeconds = await getQrExpirySeconds();
 
   const session = await AttendanceSession.create({
     courseId: course._id,
@@ -45,7 +51,7 @@ async function createSession(req, res) {
       title: session.title,
       qrDataUrl,
       expiresAt: session.expiresAt,
-      qrExpirySeconds: getQrExpirySeconds()
+      qrExpirySeconds
     }
   });
 }
@@ -60,7 +66,7 @@ async function getSessionQr(req, res) {
   const now = new Date();
   if (now > session.expiresAt) {
     session.token = generateSessionToken();
-    session.expiresAt = computeExpiresAt();
+    session.expiresAt = await computeExpiresAt();
     await session.save();
   }
 
@@ -70,13 +76,15 @@ async function getSessionQr(req, res) {
     courseCode: session.courseId.code
   });
 
+  const qrExpirySeconds = await getQrExpirySeconds();
+
   res.json({
     success: true,
     data: {
       sessionId: session._id,
       qrDataUrl,
       expiresAt: session.expiresAt,
-      qrExpirySeconds: getQrExpirySeconds(),
+      qrExpirySeconds,
       serverTime: now
     }
   });
@@ -150,7 +158,8 @@ async function scanAttendance(req, res) {
   }
 
   // Assign status based on elapsed time since session start.
-  const lateThresholdMs = getLateThresholdMinutes() * 60 * 1000;
+  const lateThresholdMinutes = await getLateThresholdMinutes();
+  const lateThresholdMs = lateThresholdMinutes * 60 * 1000;
   const elapsed = Date.now() - new Date(session.sessionDate).getTime();
   const status = elapsed <= lateThresholdMs ? 'present' : 'late';
 
