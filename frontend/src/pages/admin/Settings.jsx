@@ -45,7 +45,7 @@ export default function Settings() {
             <label className="label">{s.label}</label>
             <input
               className="input"
-              type={s.key.toLowerCase().includes('seconds') || s.key.toLowerCase().includes('minutes') ? 'number' : 'text'}
+              type={s.key.toLowerCase().includes('seconds') || s.key.toLowerCase().includes('minutes') || s.key.toLowerCase().includes('hours') ? 'number' : 'text'}
               value={values[s.key] ?? ''}
               onChange={(e) => setValues({ ...values, [s.key]: e.target.value })}
             />

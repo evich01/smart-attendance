@@ -8,10 +8,19 @@ const Setting = require('../models/Setting');
 const { generateQrDataUrl } = require('../utils/qrGenerator');
 const { generateSessionToken, computeExpiresAt, getQrExpirySeconds } = require('../utils/tokenGenerator');
 
+async function getSessionAutoEndHours() {
+  const setting = await Setting.findOne({ key: 'sessionAutoEndHours' });
+  if (setting) {
+    return parseInt(setting.value, 10) || 3;
+  }
+  return parseInt(process.env.SESSION_AUTO_END_HOURS, 10) || 3;
+}
+
 async function endExpiredSessions() {
-  const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  const hours = await getSessionAutoEndHours();
+  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
   await AttendanceSession.updateMany(
-    { isActive: true, sessionDate: { $lt: threeHoursAgo } },
+    { isActive: true, sessionDate: { $lt: cutoff } },
     { isActive: false }
   );
 }
