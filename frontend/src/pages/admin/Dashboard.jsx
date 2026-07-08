@@ -44,15 +44,14 @@ export default function AdminDashboard() {
             <div className="card p-5">
               <h2 className="font-semibold mb-3">User Distribution by Role</h2>
               <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
+                <PieChart margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                   <Pie
                     data={userRoleData}
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
+                    outerRadius={90}
                     dataKey="value"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    nameKey="name"
                   >
                     {userRoleData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.fill} />
