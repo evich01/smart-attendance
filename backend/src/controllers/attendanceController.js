@@ -8,31 +8,31 @@ const Setting = require('../models/Setting');
 const { generateQrDataUrl } = require('../utils/qrGenerator');
 const { generateSessionToken, computeExpiresAt, getQrExpirySeconds } = require('../utils/tokenGenerator');
 
-async function getSessionAutoEndHours() {
+async function getSessionAutoEndSeconds() {
   // Ensure the default setting exists
   await Setting.updateOne(
-    { key: 'sessionAutoEndHours' },
+    { key: 'sessionAutoEndSeconds' },
     { 
       $setOnInsert: { 
-        key: 'sessionAutoEndHours', 
-        value: '3', 
-        label: 'Auto-End Session After (hours)',
+        key: 'sessionAutoEndSeconds', 
+        value: '10800', 
+        label: 'Auto-End Session After (seconds)',
         createdAt: new Date()
       } 
     },
     { upsert: true }
   );
   
-  const setting = await Setting.findOne({ key: 'sessionAutoEndHours' });
+  const setting = await Setting.findOne({ key: 'sessionAutoEndSeconds' });
   if (setting) {
-    return parseInt(setting.value, 10) || 3;
+    return parseInt(setting.value, 10) || 10800;
   }
-  return parseInt(process.env.SESSION_AUTO_END_HOURS, 10) || 3;
+  return parseInt(process.env.SESSION_AUTO_END_SECONDS, 10) || 10800;
 }
 
 async function endExpiredSessions() {
-  const hours = await getSessionAutoEndHours();
-  const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+  const seconds = await getSessionAutoEndSeconds();
+  const cutoff = new Date(Date.now() - seconds * 1000);
   await AttendanceSession.updateMany(
     { isActive: true, sessionDate: { $lt: cutoff } },
     { isActive: false }

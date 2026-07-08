@@ -3,7 +3,7 @@ const Setting = require('../models/Setting');
 const DEFAULTS = [
   { key: 'qrExpirySeconds', value: '30', label: 'QR Token Expiry Duration (seconds)' },
   { key: 'lateThresholdMinutes', value: '15', label: 'Late-Arrival Threshold (minutes)' },
-  { key: 'sessionAutoEndHours', value: '3', label: 'Auto-End Session After (hours)' },
+  { key: 'sessionAutoEndSeconds', value: '10800', label: 'Auto-End Session After (seconds)' },
   { key: 'institutionName', value: 'GCTU', label: 'Institution Name' },
   { key: 'academicYear', value: '2025/2026', label: 'Current Academic Year' },
   { key: 'currentSemester', value: 'Semester 1', label: 'Current Semester' }
