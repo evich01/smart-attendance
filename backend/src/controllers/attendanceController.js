@@ -8,6 +8,14 @@ const Setting = require('../models/Setting');
 const { generateQrDataUrl } = require('../utils/qrGenerator');
 const { generateSessionToken, computeExpiresAt, getQrExpirySeconds } = require('../utils/tokenGenerator');
 
+async function endExpiredSessions() {
+  const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+  await AttendanceSession.updateMany(
+    { isActive: true, sessionDate: { $lt: threeHoursAgo } },
+    { isActive: false }
+  );
+}
+
 async function getLateThresholdMinutes() {
   const setting = await Setting.findOne({ key: 'lateThresholdMinutes' });
   if (setting) {
@@ -19,6 +27,7 @@ async function getLateThresholdMinutes() {
 // POST /api/attendance/session — Lecturer creates a session + first QR token.
 // NOTE: request body is only { courseId, title } — no location/GPS fields accepted or read.
 async function createSession(req, res) {
+  await endExpiredSessions();
   const { courseId, title } = req.body;
   if (!courseId) return res.status(400).json({ success: false, error: 'courseId is required' });
 
@@ -59,6 +68,7 @@ async function createSession(req, res) {
 // GET /api/attendance/session/:id/qr — current QR + countdown state.
 // Auto-refreshes (rotates) the token if the previous one has expired.
 async function getSessionQr(req, res) {
+  await endExpiredSessions();
   const session = await AttendanceSession.findById(req.params.id).populate('courseId');
   if (!session) return res.status(404).json({ success: false, error: 'Session not found' });
   if (!session.isActive) return res.status(400).json({ success: false, error: 'Session has ended' });
@@ -103,6 +113,7 @@ async function endSession(req, res) {
 
 // GET /api/attendance/session/:id/live — live attendance list (polled every 5s)
 async function liveAttendance(req, res) {
+  await endExpiredSessions();
   const records = await AttendanceRecord.find({ sessionId: req.params.id })
     .populate({ path: 'studentId', populate: { path: 'userId', select: 'name email' } })
     .sort({ scannedAt: -1 });
@@ -122,6 +133,7 @@ async function liveAttendance(req, res) {
 // POST /api/attendance/scan — Student submits a scanned token.
 // Sequential validation exactly per FR-06 (five steps — no GPS/location branch).
 async function scanAttendance(req, res) {
+  await endExpiredSessions();
   const { sessionId, token } = req.body;
   if (!sessionId || !token) {
     return res.status(400).json({ success: false, error: 'sessionId and token are required' });
