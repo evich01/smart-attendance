@@ -18,8 +18,16 @@ export default function LiveSession() {
     try {
       const { data } = await attendanceApi.getSessionQr(sessionId);
       setQrData(data.data);
+      setError('');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to refresh QR code');
+      const errorMsg = err.response?.data?.error || 'Failed to refresh QR code';
+      setError(errorMsg);
+      // If the error says the session has ended, set ended to true
+      if (errorMsg.includes('Session has ended')) {
+        setEnded(true);
+        clearInterval(livePollRef.current);
+        clearInterval(qrPollRef.current);
+      }
     }
   }, [sessionId]);
 
@@ -37,7 +45,12 @@ export default function LiveSession() {
     fetchLive();
     // Poll live attendance every 5 seconds, per FR-04
     livePollRef.current = setInterval(fetchLive, 5000);
-    return () => clearInterval(livePollRef.current);
+    // Poll QR every 10 seconds to check for auto-ended sessions
+    qrPollRef.current = setInterval(fetchQr, 10000);
+    return () => {
+      clearInterval(livePollRef.current);
+      clearInterval(qrPollRef.current);
+    };
   }, [fetchQr, fetchLive]);
 
   async function handleEnd() {

@@ -9,6 +9,20 @@ const { generateQrDataUrl } = require('../utils/qrGenerator');
 const { generateSessionToken, computeExpiresAt, getQrExpirySeconds } = require('../utils/tokenGenerator');
 
 async function getSessionAutoEndHours() {
+  // Ensure the default setting exists
+  await Setting.updateOne(
+    { key: 'sessionAutoEndHours' },
+    { 
+      $setOnInsert: { 
+        key: 'sessionAutoEndHours', 
+        value: '3', 
+        label: 'Auto-End Session After (hours)',
+        createdAt: new Date()
+      } 
+    },
+    { upsert: true }
+  );
+  
   const setting = await Setting.findOne({ key: 'sessionAutoEndHours' });
   if (setting) {
     return parseInt(setting.value, 10) || 3;
