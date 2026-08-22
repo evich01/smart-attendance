@@ -28,7 +28,7 @@ export default function Login() {
       <div className="card w-full max-w-md p-8 md:p-10">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent mb-2">Smart Attendance</h1>
-          <p className="text-sm text-gray-500 dark:text-cream-200/70">QR-based attendance, no GPS required.</p>
+          <p className="text-sm text-gray-500 dark:text-cream-200/70">QR-based attendance</p>
         </div>
 
         {error && (

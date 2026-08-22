@@ -26,9 +26,9 @@ Demo accounts created by `npm run seed` (password for all: `Demo@1234`):
 
 | Role      | Email               |
 |-----------|----------------------|
-| Admin     | admin@demo.edu       |
-| Lecturer  | lecturer@demo.edu    |
-| Student   | student@demo.edu     |
+| Admin     | admin@gmail.com       |
+| Lecturer  | lecturer@gmail.com    |
+| Student   | student@gmail.com     |
 
 ## 3. Frontend setup
 

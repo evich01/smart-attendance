@@ -22,12 +22,12 @@ async function seed({ closeConnection = false } = {}) {
 
   const pw = await bcrypt.hash('Demo@1234', BCRYPT_ROUNDS);
 
-  const admin = await User.create({ name: 'System Admin', email: 'admin@demo.edu', passwordHash: pw, role: 'admin' });
+  const admin = await User.create({ name: 'System Admin', email: 'admin@gmail.com', passwordHash: pw, role: 'admin' });
 
-  const lecturerUser = await User.create({ name: 'Dr. Ama Owusu', email: 'lecturer@demo.edu', passwordHash: pw, role: 'lecturer' });
+  const lecturerUser = await User.create({ name: 'Dr. Ama Owusu', email: 'lecturer@gmail.com', passwordHash: pw, role: 'lecturer' });
   const lecturer = await Lecturer.create({ userId: lecturerUser._id, staffId: 'STF-001', department: 'Computer Science', specialisation: 'Software Engineering' });
 
-  const studentUser = await User.create({ name: 'Kwame Mensah', email: 'student@demo.edu', passwordHash: pw, role: 'student' });
+  const studentUser = await User.create({ name: 'Kwame Mensah', email: 'student@gmail.com', passwordHash: pw, role: 'student' });
   const student = await Student.create({ userId: studentUser._id, studentNumber: 'STU-0001', department: 'Computer Science', yearLevel: 3, program: 'BSc. IT' });
 
   const course = await Course.create({
@@ -46,9 +46,9 @@ async function seed({ closeConnection = false } = {}) {
   ]);
 
   console.log('[seed] Done. Demo accounts (password: Demo@1234):');
-  console.log('  Admin:    admin@demo.edu');
-  console.log('  Lecturer: lecturer@demo.edu');
-  console.log('  Student:  student@demo.edu');
+  console.log('  Admin:    admin@gmail.com');
+  console.log('  Lecturer: lecturer@gmail.com');
+  console.log('  Student:  student@gmail.com');
 
   if (closeConnection) {
     await mongoose.connection.close();
