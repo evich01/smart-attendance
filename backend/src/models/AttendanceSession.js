@@ -1,15 +1,15 @@
 const mongoose = require('mongoose');
 
-// NOTE: No locationLat / locationLng / locationRadius fields — GPS is fully removed
-// per the build spec's explicit exclusions (Section 17).
 const attendanceSessionSchema = new mongoose.Schema({
-  courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true },
-  lecturerId: { type: mongoose.Schema.Types.ObjectId, ref: 'Lecturer', required: true },
-  title: { type: String, default: '' },
-  token: { type: String, required: true, unique: true }, // rotating UUID
-  expiresAt: { type: Date, required: true }, // now + 30s
-  sessionDate: { type: Date, default: Date.now },
-  isActive: { type: Boolean, default: true },
+  type: { type: String, enum: ['CHECK_IN', 'CHECK_OUT'], required: true },
+  sessionToken: { type: String, required: true, unique: true },
+  sessionDate: { type: Date, required: true },
+  startedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  startTime: { type: Date, default: Date.now },
+  expiresAt: { type: Date, required: true },
+  status: { type: String, enum: ['active', 'closed'], default: 'active' },
+  closedAt: { type: Date, default: null },
+  departmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Department', default: null },
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -16,15 +16,17 @@ const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
-const courseRoutes = require('./routes/courseRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const settingRoutes = require('./routes/settingRoutes');
+const departmentRoutes = require('./routes/departmentRoutes');
+const leaveRoutes = require('./routes/leaveRoutes');
+const auditRoutes = require('./routes/auditRoutes');
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: '*' })); // Allow all origins for local network testing
+app.use(cors({ origin: '*' }));
 app.use(express.json({ limit: '1mb' }));
 
 app.get('/api/health', (req, res) => {
@@ -33,10 +35,12 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/courses', courseRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/settings', settingRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/audit-logs', auditRoutes);
 
 // Serve frontend static files in production
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');

@@ -4,14 +4,13 @@ const asyncHandler = require('../utils/asyncHandler');
 const auth = require('../middleware/auth');
 const rbac = require('../middleware/rbac');
 const {
-  courseReport, institutionReport, studentHistory, exportCourseCsv
+  attendanceReport, exportAttendanceCsv, dashboardAnalytics
 } = require('../controllers/reportController');
 
 router.use(auth);
 
-router.get('/course/:courseId', rbac('lecturer', 'admin'), asyncHandler(courseReport));
-router.get('/institution', rbac('admin'), asyncHandler(institutionReport));
-router.get('/student/history', rbac('student'), asyncHandler(studentHistory));
-router.get('/export/:courseId', rbac('lecturer', 'admin'), asyncHandler(exportCourseCsv));
+router.get('/attendance', rbac('manager', 'admin'), asyncHandler(attendanceReport));
+router.get('/export/attendance', rbac('manager', 'admin'), asyncHandler(exportAttendanceCsv));
+router.get('/dashboard', rbac('admin'), asyncHandler(dashboardAnalytics));
 
 module.exports = router;

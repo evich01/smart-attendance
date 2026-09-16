@@ -1,0 +1,509 @@
+UPDATE EXISTING SMART ATTENDANCE CHECKER
+IMPORTANT — DO NOT CREATE A NEW PROJECT
+I already have a working Smart Attendance Checker web application.
+Your task is to UPDATE, EXTEND, AND REFACTOR THE EXISTING SYSTEM to transform it into a Company Employee Attendance Management System.
+Do NOT create a new project.
+Do NOT rebuild the application from scratch.
+Do NOT replace the existing project structure unnecessarily.
+First, inspect and understand the existing codebase, architecture, authentication system, QR-scanning functionality, database models, routes, controllers, and frontend components.
+Then modify the existing application to implement the requirements below.
+The existing technology stack should remain:
+• React.js
+• Node.js
+• Express.js
+• MongoDB
+• Mongoose
+• Existing authentication system
+• Existing QR-code/camera functionality
+Reuse existing components, logic, authentication, API structure, and database models wherever practical.
+If an existing feature already performs part of the required functionality, modify and extend it instead of creating a duplicate implementation.
+1. NEW SYSTEM PURPOSE
+The current Smart Attendance Checker should be adapted into a company-based employee attendance system.
+The system will allow a company to manage employee attendance using QR codes.
+There will be three main user roles:
+• Admin
+• Manager
+• Staff
+The system should record:
+• Employee identity
+• Date
+• Check-in time
+• Check-in status
+• Check-out time
+• Total working duration
+• Attendance session
+• Other relevant attendance information
+The system should automatically determine whether an employee was Present or Late based on the company's configured attendance rules.
+2. USER ROLES
+ADMIN
+The Admin has the highest level of system access.
+The Admin should be able to:
+• Create staff accounts.
+• Create manager accounts.
+• View all users.
+• Edit user information.
+• Activate/deactivate users.
+• Assign employees to departments.
+• View all attendance records.
+• Search attendance records.
+• Filter attendance by date.
+• Filter attendance by employee.
+• Filter attendance by department.
+• Filter attendance by attendance status.
+• View late employees.
+• View employees who did not check in.
+• View employees with missing check-outs.
+• View attendance statistics.
+• Configure company attendance settings.
+• Configure official work start time.
+• Configure late threshold.
+• Configure official work end time if necessary.
+• Configure checkout rules.
+• View audit logs.
+• Manage departments.
+• View leave requests.
+• Manage/override attendance records when appropriate.
+• Export attendance reports.
+The Admin should have access to company-wide attendance information.
+3. MANAGER
+Managers are responsible for managing attendance sessions and monitoring employees.
+A Manager should be able to:
+• Start the daily check-in session.
+• Generate/display the Check-In QR code.
+• Close the check-in session.
+• Start the check-out session.
+• Generate/display the Check-Out QR code.
+• Close the check-out session.
+• View employees who have checked in.
+• View check-in times.
+• View Present employees.
+• View Late employees.
+• View employees who have not checked in.
+• View employees who have checked out.
+• View employees with missing check-outs.
+• Monitor attendance for their assigned department(s), if department restrictions are implemented.
+• View attendance statistics.
+• Review leave requests from staff.
+• Approve/reject leave requests where permitted.
+Managers should not have unrestricted Admin privileges.
+Use proper role-based authorization on the backend.
+4. STAFF
+Staff members will use the system to record their own attendance.
+A Staff member should be able to:
+• Log into their account.
+• View their attendance status for the current day.
+• Scan the Check-In QR code.
+• Scan the Check-Out QR code.
+• View their check-in time.
+• View their check-out time.
+• View their attendance status.
+• View their working duration.
+• View attendance history.
+• Submit leave requests.
+• View the status of their leave requests.
+• View their own profile information.
+Staff should NOT be able to:
+• Start attendance sessions.
+• Generate QR codes.
+• Modify their attendance time.
+• Change their attendance status.
+• View other employees' private attendance records.
+• Access Admin/Manager functionality.
+5. TWO DIFFERENT QR CODE SESSIONS
+The attendance system should now have TWO separate QR-code processes:
+A. CHECK-IN QR CODE
+The Manager starts the morning attendance session.
+The Manager clicks:
+Start Check-In
+The backend creates a new Check-In attendance session and generates a unique QR/session token.
+The QR code is displayed on the Manager dashboard.
+Staff members log into their accounts and scan this QR code.
+After a successful scan, the system records:
+• Staff ID
+• Username
+• Employee name
+• Date
+• Check-in time
+• Attendance session ID
+• Attendance status
+6. CHECK-OUT QR CODE
+At the end of the working period, the Manager starts a separate Check-Out session.
+The Manager clicks:
+Start Check-Out
+The backend creates a new Check-Out session with a different unique session token.
+The Manager displays the Check-Out QR code.
+Staff members scan the Check-Out QR code before leaving.
+The system records:
+• Staff ID
+• Username
+• Date
+• Check-out time
+• Check-out session ID
+The system then calculates the employee's working duration.
+7. CHECK-IN AND CHECK-OUT MUST BE DIFFERENT
+Do NOT use one QR code for both actions.
+There should be two distinct session types:
+CHECK_IN CHECK_OUT 
+For example:
+Check-In Session ---------------- type: CHECK_IN date: 2026-09-16 sessionToken: unique-token status: active 
+and:
+Check-Out Session ----------------- type: CHECK_OUT date: 2026-09-16 sessionToken: different-token status: active 
+The backend must validate the QR session type.
+A Check-In QR code must NOT be accepted by the Check-Out endpoint.
+A Check-Out QR code must NOT be accepted by the Check-In endpoint.
+8. ATTENDANCE WORKFLOW
+The complete daily workflow should be:
+MANAGER | Start Check-In | ↓ CHECK-IN QR | ↓ Staff scans QR | ↓ Backend validates | ↓ Check-in recorded | ┌─────────┴─────────┐ ↓ ↓ Present Late | | └─────────┬─────────┘ | WORKING DAY | ↓ Manager starts Check-Out | ↓ CHECK-OUT QR | ↓ Staff scans QR | ↓ Backend validates | ↓ Check-out recorded | ↓ Working duration calculated 
+9. PRESENT / LATE LOGIC
+Attendance status should be determined by the backend.
+For example, the company may configure:
+Work Start Time: 08:00 AM Late Threshold: 08:15 AM 
+Then:
+08:00 → Present 08:05 → Present 08:15 → Present 08:16 → Late 08:30 → Late 
+The exact values must be configurable by Admin.
+Do NOT hard-code these values into the frontend.
+The backend should calculate the status using the authoritative server/company time.
+The frontend should simply display the result returned by the backend.
+10. CHECK-IN RULES
+A staff member should normally only be able to check in once per working day.
+If the same employee scans the Check-In QR code again after already checking in, do not create another attendance record.
+Instead return a clear response such as:
+You have already checked in today.
+The original check-in time must remain unchanged.
+11. CHECK-OUT RULES
+A staff member should only be able to check out if they have already checked in.
+If someone attempts to check out without a check-in record:
+You must check in before checking out.
+A staff member should normally only be able to check out once.
+If they scan again:
+Your check-out has already been recorded.
+Do not overwrite the original checkout time unless an authorized Admin/Manager explicitly modifies the record.
+12. WORKING DURATION
+After both check-in and check-out exist, calculate the employee's working duration.
+Example:
+Check-in: 08:07 AM Check-out: 05:03 PM Working Duration: 8 hours 56 minutes 
+The calculation must be performed reliably using backend/server data.
+Do not rely on the user's device clock.
+If the employee has checked in but has not checked out:
+Check-in: 08:07 AM Check-out: — Status: Missing Check-Out 
+Do not invent a checkout time.
+13. ABSENCE
+The system should be able to identify employees who did not check in.
+However, do NOT immediately mark an employee absent simply because they have not scanned yet.
+While the Check-In session is active, they should remain:
+Not Checked In
+After the configured attendance cutoff/session closure, the system can identify employees who never checked in as absent.
+Example:
+Total Staff: 30 Present: 20 Late: 5 Absent: 5 
+The exact absence rules should be configurable or clearly defined in the backend.
+14. QR CODE SECURITY
+The QR codes must be secure and session-based.
+Do NOT create a permanent QR code.
+Each attendance session should generate a unique token.
+For example:
+Manager ↓ Start Check-In ↓ Backend creates unique session ↓ Secure token generated ↓ QR code generated ↓ Staff scans ↓ Backend validates token ↓ Attendance recorded 
+The backend should verify:
+• Token exists.
+• Session is valid.
+• Session is active.
+• Session belongs to the correct date.
+• Session is the correct type.
+• User is authenticated.
+• User has the Staff role.
+• Staff member has not already performed that action.
+Old QR codes should not be reusable.
+Closed sessions should not accept new scans.
+15. AUTHENTICATION AND USER IDENTITY
+The staff member's identity must come from the authenticated user.
+Do NOT allow the frontend to submit an arbitrary username such as:
+username: john 
+and trust it.
+Instead:
+Staff logs in ↓ Authentication token ↓ Backend identifies user ↓ User ID obtained from authentication ↓ Attendance associated with that user 
+This prevents one employee from submitting attendance on behalf of another employee.
+16. DEPARTMENT MANAGEMENT
+Add support for company departments.
+Example:
+Company │ ├── IT │ ├── John │ ├── Sarah │ └── Michael │ ├── Finance │ ├── David │ └── Mary │ └── Human Resources ├── James └── Linda 
+Each staff member should optionally belong to a department.
+Admins should be able to:
+• Create departments.
+• Edit departments.
+• Assign staff to departments.
+• Change departments.
+• View department attendance.
+Managers can optionally be assigned to specific departments.
+If a Manager is assigned to a department, they should only see/manage attendance for the employees they are responsible for.
+Admin should retain company-wide access.
+17. ATTENDANCE DATABASE DESIGN
+Modify the existing database structure rather than unnecessarily replacing existing models.
+A possible attendance session structure is:
+AttendanceSession ------------------ _id date type sessionToken startedBy startTime status closedAt 
+Where:
+type = CHECK_IN 
+or:
+type = CHECK_OUT 
+The Attendance record can contain:
+Attendance ------------------ _id employeeId date checkInTime checkOutTime status workingDuration checkInSessionId checkOutSessionId createdAt updatedAt 
+Use references to the existing User model where appropriate.
+Do not unnecessarily duplicate user data.
+Adapt the exact schema to the existing application's architecture.
+18. STAFF ATTENDANCE HISTORY
+Staff should have an attendance history page.
+Example:
+DateCheck-InStatusCheck-OutWorking TimeSept 167:58 AMPresent5:04 PM9h 06mSept 158:23 AMLate5:01 PM8h 38mSept 147:56 AMPresent4:58 PM9h 02mSept 13—Absent—— 
+Staff should only see their own records.
+19. MANAGER ATTENDANCE DASHBOARD
+The Manager dashboard should focus on today's attendance.
+Display:
+Today's Attendance Date: September 16, 2026 Check-In Session: Active Check-Out Session: Not Started Total Staff: 30 Present: 20 Late: 5 Not Checked In: 5 
+When checkout begins:
+Check-Out Session: Active Checked In: 25 Checked Out: 18 Missing Check-Out: 7 
+Display a table such as:
+EmployeeCheck-InStatusCheck-OutWorking TimeJohn7:58 AMPresent5:03 PM9h 05mSarah8:22 AMLate5:01 PM8h 39mMichael8:04 AMPresent—Missing 
+Allow the Manager to search/filter the records.
+20. ADMIN DASHBOARD
+The Admin dashboard should provide a company-wide overview.
+Display statistics such as:
+• Total employees
+• Total managers
+• Present today
+• Late today
+• Absent today
+• Missing check-outs
+• Active Check-In session
+• Active Check-Out session
+Add charts where appropriate to show attendance trends.
+Examples:
+• Attendance by day.
+• Present vs Late vs Absent.
+• Department attendance.
+• Late attendance trends.
+Do not overload the dashboard with unnecessary charts.
+21. ATTENDANCE REPORTS
+Add an attendance reporting feature.
+Admin and authorized Managers should be able to generate reports based on:
+• Date range
+• Employee
+• Department
+• Status
+For example:
+September 1 – September 30 Employee: John Present: 18 Late: 4 Absent: 2 Missing Check-Out: 1 
+Allow attendance records to be exported to:
+• CSV
+• PDF, if appropriate
+The exported information should be based on actual database records.
+22. LEAVE MANAGEMENT
+Add a simple employee leave-management feature.
+Staff should be able to submit a leave request containing:
+• Leave type
+• Start date
+• End date
+• Reason
+• Request status
+Possible statuses:
+Pending Approved Rejected 
+Managers/Admins can review requests.
+Example:
+John Annual Leave Sept 20 – Sept 23 Status: Pending 
+If leave is approved, the attendance system should recognize those dates appropriately rather than incorrectly treating the employee as absent.
+Keep this feature simple and integrated with the existing authentication/user system.
+23. AUDIT LOGS
+Add an audit log system for important administrative actions.
+The system should record events such as:
+Admin created employee Admin disabled employee Manager started Check-In Manager closed Check-In Manager started Check-Out Manager closed Check-Out Employee checked in Employee checked out Admin modified attendance record Manager approved leave Manager rejected leave Admin changed attendance settings 
+Each audit entry should contain appropriate information such as:
+user action timestamp target/resource additional information where appropriate 
+This will help maintain accountability.
+24. ATTENDANCE SETTINGS
+Admins should have a settings page.
+Possible settings:
+Work Start Time: 08:00 Late Threshold: 08:15 Work End Time: 17:00 Check-In Session: Enabled Check-Out Session: Enabled 
+Do not hard-code company rules in React.
+Store configurable settings appropriately in the backend/database.
+25. ROLE-BASED ACCESS CONTROL
+Implement proper backend authorization.
+The general permissions should be:
+ADMIN ↓ Full system access MANAGER ↓ Attendance session management Department attendance Leave management Attendance monitoring STAFF ↓ Own attendance QR scanning Attendance history Leave requests Own profile 
+Do not rely only on hiding buttons in React.
+The backend must protect the routes.
+For example, even if a Staff user manually sends an Admin API request through Postman, the backend should reject it.
+26. API STRUCTURE
+Modify the existing API structure according to the project's current architecture.
+Possible endpoints include:
+POST /api/attendance/sessions/check-in/start POST /api/attendance/sessions/check-in/close POST /api/attendance/sessions/check-out/start POST /api/attendance/sessions/check-out/close GET /api/attendance/session/today POST /api/attendance/check-in POST /api/attendance/check-out GET /api/attendance/today GET /api/attendance/my-history GET /api/attendance/history GET /api/attendance/reports 
+These are examples.
+Do not blindly create these exact routes if the existing project already has a suitable route structure.
+Follow the current project's naming conventions and architecture.
+27. ERROR HANDLING
+Handle common situations properly.
+No active Check-In session
+Today's check-in session has not started. 
+Invalid QR
+Invalid attendance QR code. 
+Expired/closed QR
+This attendance session is no longer active. 
+Already checked in
+You have already checked in today. 
+Checkout without check-in
+You must check in before checking out. 
+Already checked out
+Your check-out has already been recorded. 
+Camera permission denied
+Display a clear explanation that camera permission is required.
+Unauthorized role
+Return an appropriate authorization error from the backend.
+28. TIME SECURITY
+Attendance time is important.
+Do NOT trust:
+Date.now() 
+from the employee's browser as the official attendance time.
+The backend should determine the authoritative timestamp.
+The attendance status should also be calculated on the backend.
+Conceptually:
+Staff scans ↓ Backend receives request ↓ Backend determines current time ↓ Backend gets company attendance settings ↓ Backend determines Present/Late ↓ Backend saves record 
+If necessary, support a configurable company timezone.
+29. FRONTEND REQUIREMENTS
+Update the existing React frontend.
+Do not create an unrelated frontend.
+Reuse existing:
+• Login system
+• Authentication state
+• QR scanner
+• Components
+• API service/Axios configuration
+• Routing
+• Styling where appropriate
+Add or modify:
+• Admin dashboard
+• Manager dashboard
+• Staff dashboard
+• Check-In QR page
+• Check-Out QR page
+• Staff scanner page
+• Attendance history
+• Attendance reports
+• Department management
+• Leave management
+• Attendance settings
+• Audit logs
+• Employee management
+The UI should feel like a professional company attendance system.
+Keep functionality more important than unnecessary visual complexity.
+30. IMPORTANT SECURITY REQUIREMENT
+The system should be designed with the assumption that users may attempt to manipulate requests.
+Therefore:
+• Never trust attendance status from the frontend.
+• Never trust check-in/check-out time from the frontend.
+• Never trust employee identity supplied by the frontend.
+• Validate QR sessions on the backend.
+• Validate session type.
+• Validate session date.
+• Validate session status.
+• Prevent duplicate check-ins.
+• Prevent duplicate check-outs.
+• Protect Admin routes.
+• Protect Manager routes.
+• Ensure Staff can only access their own attendance records.
+31. DEVELOPMENT APPROACH
+Before changing anything:
+STEP 1 — Inspect
+Inspect the existing Smart Attendance Checker.
+Understand:
+• Folder structure
+• Frontend architecture
+• Backend architecture
+• Authentication
+• User model
+• QR implementation
+• Attendance model
+• API routes
+• Controllers
+• Middleware
+• Database connection
+• Existing dashboards
+STEP 2 — Plan
+Identify which existing files should be:
+• Modified
+• Extended
+• Reused
+• Newly created only where necessary
+Do not duplicate existing functionality.
+STEP 3 — Implement
+Implement the new features incrementally.
+After each major change, ensure that the existing application still works.
+STEP 4 — Test
+Test at minimum:
+Admin
+• Login
+• User management
+• Department management
+• Attendance settings
+• Reports
+• Attendance viewing
+Manager
+• Login
+• Start Check-In
+• Display Check-In QR
+• Close Check-In
+• Start Check-Out
+• Display Check-Out QR
+• Close Check-Out
+• View attendance
+Staff
+• Login
+• Scan Check-In QR
+• Receive Present/Late result
+• Scan Check-Out QR
+• Receive checkout confirmation
+• View working duration
+• View attendance history
+• Submit leave request
+STEP 5 — Security Testing
+Test that:
+• Staff cannot start QR sessions.
+• Staff cannot access Admin APIs.
+• Staff cannot access other employees' attendance.
+• Old QR codes cannot be reused.
+• Check-In QR cannot be used for Check-Out.
+• Check-Out QR cannot be used for Check-In.
+• Duplicate scans are rejected.
+• Users cannot manipulate attendance timestamps through the frontend.
+32. DO NOT BREAK THE EXISTING SYSTEM
+This is extremely important.
+The project already exists and contains working functionality.
+Therefore:
+DO NOT:
+• Delete the existing project.
+• Create a separate project.
+• Start a new React application.
+• Start a new Express application.
+• Replace the existing database unnecessarily.
+• Replace working authentication unnecessarily.
+• Rewrite everything just because the new requirements are different.
+• Remove existing working features without a reason.
+Instead:
+UPDATE THE SYSTEM THAT IS ALREADY THERE.
+Inspect the existing implementation first, then integrate these requirements into it.
+If a current feature needs restructuring to support the new attendance workflow, modify it carefully while preserving its existing functionality.
+FINAL SYSTEM CONCEPT
+The final application should operate as follows:
+COMPANY │ ┌──────────────┼──────────────┐ │ │ │ ADMIN MANAGER STAFF │ │ │ │ │ │ Manage Users Start QR Login Departments Sessions │ Settings │ │ Reports ↓ │ Audit Logs CHECK-IN QR │ │ │ │ │ └──────→ Staff scans │ │ │ ↓ │ Check-in time │ │ │ Present/Late │ │ │ WORK DAY │ │ │ Manager starts Check-Out │ │ │ ↓ │ CHECK-OUT QR │ │ │ Staff scans │ │ │ ↓ │ Check-out time │ │ │ ↓ │ Working duration │ │ └──────────────┬─────────────┘ ↓ ATTENDANCE DATABASE │ ↓ Reports + Analytics 
+The goal is to evolve the existing Smart Attendance Checker into a practical company attendance platform with:
+• Admin / Manager / Staff roles
+• Department management
+• Separate Check-In and Check-Out QR sessions
+• Automatic Present/Late classification
+• Server-side attendance timestamps
+• Duplicate-scan prevention
+• Working-duration calculation
+• Absence detection
+• Attendance history
+• Leave management
+• Attendance reports
+• Dashboard analytics
+• Audit logs
+• Secure role-based access control
+• Secure session-based QR codes
+Again, the most important instruction is:
+UPDATE THE EXISTING SMART ATTENDANCE CHECKER. DO NOT CREATE A NEW SYSTEM FROM SCRATCH.

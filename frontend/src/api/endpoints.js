@@ -11,42 +11,54 @@ export const authApi = {
 export const userApi = {
   list: (params) => client.get('/users', { params }),
   stats: () => client.get('/users/stats'),
-  listLecturers: () => client.get('/users/lecturers'),
+  listStaff: () => client.get('/users/staff'),
   create: (payload) => client.post('/users', payload),
   update: (id, payload) => client.put(`/users/${id}`, payload),
   remove: (id) => client.delete(`/users/${id}`),
   toggleStatus: (id) => client.patch(`/users/${id}/status`)
 };
 
-export const courseApi = {
-  listAll: () => client.get('/courses'),
-  myCourses: () => client.get('/courses/my'),
-  enrolledCourses: () => client.get('/courses/enrolled'),
-  create: (payload) => client.post('/courses', payload),
-  update: (id, payload) => client.put(`/courses/${id}`, payload),
-  remove: (id) => client.delete(`/courses/${id}`),
-  enroll: (id, email) => client.post(`/courses/${id}/enroll`, { email }),
-  getUnenrolledStudents: (id, search) => client.get(`/courses/${id}/unenrolled-students`, { params: { search } }),
-  getEnrolledStudents: (id) => client.get(`/courses/${id}/enrolled-students`),
-  unenrollStudent: (courseId, studentId) => client.delete(`/courses/${courseId}/enroll/${studentId}`)
+export const departmentApi = {
+  list: () => client.get('/departments'),
+  create: (payload) => client.post('/departments', payload),
+  update: (id, payload) => client.put(`/departments/${id}`, payload),
+  remove: (id) => client.delete(`/departments/${id}`)
 };
 
 export const attendanceApi = {
-  createSession: (courseId, title) => client.post('/attendance/session', { courseId, title }),
-  getSessionQr: (id) => client.get(`/attendance/session/${id}/qr`),
-  endSession: (id) => client.patch(`/attendance/session/${id}/end`),
-  liveAttendance: (id) => client.get(`/attendance/session/${id}/live`),
-  scan: (sessionId, token) => client.post('/attendance/scan', { sessionId, token })
+  startCheckIn: (departmentId) => client.post('/attendance/sessions/check-in/start', { departmentId }),
+  startCheckOut: (departmentId) => client.post('/attendance/sessions/check-out/start', { departmentId }),
+  closeSession: (id) => client.patch(`/attendance/sessions/${id}/close`),
+  getSessionQr: (id) => client.get(`/attendance/sessions/${id}/qr`),
+  todaySessions: () => client.get('/attendance/sessions/today'),
+  checkIn: (sessionId, sessionToken) => client.post('/attendance/check-in', { sessionId, sessionToken }),
+  checkOut: (sessionId, sessionToken) => client.post('/attendance/check-out', { sessionId, sessionToken }),
+  today: () => client.get('/attendance/today'),
+  myToday: () => client.get('/attendance/my-today'),
+  myHistory: (params) => client.get('/attendance/my-history', { params }),
+  history: (params) => client.get('/attendance/history', { params }),
+  updateRecord: (id, payload) => client.put(`/attendance/record/${id}`, payload)
 };
 
 export const reportApi = {
-  courseReport: (courseId) => client.get(`/reports/course/${courseId}`),
-  institutionReport: () => client.get('/reports/institution'),
-  studentHistory: () => client.get('/reports/student/history'),
-  exportCsvUrl: (courseId) => `${client.defaults.baseURL}/reports/export/${courseId}`
+  attendanceReport: (params) => client.get('/reports/attendance', { params }),
+  exportCsv: (params) => client.get('/reports/export/attendance', { params, responseType: 'blob' }),
+  dashboardAnalytics: () => client.get('/reports/dashboard')
 };
 
 export const settingApi = {
   get: () => client.get('/settings'),
   update: (payload) => client.put('/settings', payload)
 };
+
+export const leaveApi = {
+  submit: (payload) => client.post('/leaves', payload),
+  myLeaves: (params) => client.get('/leaves/my', { params }),
+  reviewList: (params) => client.get('/leaves/review', { params }),
+  approveReject: (id, status, reviewNotes) => client.patch(`/leaves/${id}/review`, { status, reviewNotes })
+};
+
+export const auditApi = {
+  list: (params) => client.get('/audit-logs', { params })
+};
+

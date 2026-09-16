@@ -1,8 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const Student = require('../models/Student');
-const Lecturer = require('../models/Lecturer');
+const Department = require('../models/Department');
 const { logAction } = require('../utils/logger');
 
 const BCRYPT_ROUNDS = 12;
@@ -20,42 +19,33 @@ function sanitizeUser(user) {
     id: user._id,
     name: user.name,
     email: user.email,
+    phone: user.phone || '',
     role: user.role,
-    isActive: user.isActive
+    isActive: user.isActive,
+    employeeId: user.employeeId || '',
+    departmentId: user.departmentId || null
   };
 }
 
-// Helper function to generate student number
-async function generateStudentNumber() {
-  const lastStudent = await Student.findOne().sort({ studentNumber: -1 });
-  if (!lastStudent) {
-    return 'STU-001';
+async function generateEmployeeId(role) {
+  const prefix = role === 'manager' ? 'MGR' : role === 'staff' ? 'EMP' : 'ADM';
+  const lastUser = await User.findOne({ role }).sort({ employeeId: -1 });
+  let nextNum = 1;
+  if (lastUser && lastUser.employeeId) {
+    const match = lastUser.employeeId.match(/-(\d+)$/);
+    if (match) nextNum = parseInt(match[1], 10) + 1;
   }
-  const lastNumber = parseInt(lastStudent.studentNumber.split('-')[1], 10);
-  const newNumber = lastNumber + 1;
-  return `STU-${String(newNumber).padStart(3, '0')}`;
+  return `${prefix}-${String(nextNum).padStart(4, '0')}`;
 }
 
-// Helper function to generate staff ID
-async function generateStaffId() {
-  const lastLecturer = await Lecturer.findOne().sort({ staffId: -1 });
-  if (!lastLecturer) {
-    return 'STF-001';
-  }
-  const lastNumber = parseInt(lastLecturer.staffId.split('-')[1], 10);
-  const newNumber = lastNumber + 1;
-  return `STF-${String(newNumber).padStart(3, '0')}`;
-}
-
-// POST /api/auth/register
 async function register(req, res) {
-  const { name, email, password, role, studentNumber, staffId, department, yearLevel, program, specialisation } = req.body;
+  const { name, email, password, role, phone, departmentId } = req.body;
 
   if (!name || !email || !password || !role) {
     return res.status(400).json({ success: false, error: 'name, email, password, and role are required' });
   }
-  if (!['admin', 'lecturer', 'student'].includes(role)) {
-    return res.status(400).json({ success: false, error: 'role must be admin, lecturer, or student' });
+  if (!['admin', 'manager', 'staff'].includes(role)) {
+    return res.status(400).json({ success: false, error: 'role must be admin, manager, or staff' });
   }
 
   const existing = await User.findOne({ email: email.toLowerCase() });
@@ -63,22 +53,22 @@ async function register(req, res) {
     return res.status(409).json({ success: false, error: 'Email is already registered' });
   }
 
-  const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-  const user = await User.create({ name, email: email.toLowerCase(), passwordHash, role });
-
-  if (role === 'student') {
-    let finalStudentNumber = studentNumber;
-    if (!finalStudentNumber) {
-      finalStudentNumber = await generateStudentNumber();
-    }
-    await Student.create({ userId: user._id, studentNumber: finalStudentNumber, department, yearLevel, program });
-  } else if (role === 'lecturer') {
-    let finalStaffId = staffId;
-    if (!finalStaffId) {
-      finalStaffId = await generateStaffId();
-    }
-    await Lecturer.create({ userId: user._id, staffId: finalStaffId, department, specialisation });
+  if (departmentId) {
+    const dept = await Department.findById(departmentId);
+    if (!dept) return res.status(400).json({ success: false, error: 'Invalid department' });
   }
+
+  const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+  const employeeId = await generateEmployeeId(role);
+  const user = await User.create({
+    name,
+    email: email.toLowerCase(),
+    phone: phone || '',
+    passwordHash,
+    role,
+    employeeId,
+    departmentId: departmentId || null
+  });
 
   await logAction({ userId: user._id, action: 'REGISTER', details: `role=${role}`, req });
 
@@ -86,14 +76,13 @@ async function register(req, res) {
   res.status(201).json({ success: true, data: { token, user: sanitizeUser(user) } });
 }
 
-// POST /api/auth/login
 async function login(req, res) {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ success: false, error: 'email and password are required' });
   }
 
-  const user = await User.findOne({ email: email.toLowerCase() });
+  const user = await User.findOne({ email: email.toLowerCase() }).populate('departmentId', 'name');
   if (!user || !user.isActive) {
     return res.status(401).json({ success: false, error: 'Invalid credentials or inactive account' });
   }
@@ -106,10 +95,11 @@ async function login(req, res) {
   await logAction({ userId: user._id, action: 'LOGIN', req });
 
   const token = signToken(user);
-  res.json({ success: true, data: { token, user: sanitizeUser(user) } });
+  const userData = sanitizeUser(user);
+  if (user.departmentId) userData.departmentName = user.departmentId.name;
+  res.json({ success: true, data: { token, user: userData } });
 }
 
-// PUT /api/auth/change-password
 async function changePassword(req, res) {
   const { currentPassword, newPassword } = req.body;
   if (!currentPassword || !newPassword) {
@@ -134,11 +124,14 @@ async function changePassword(req, res) {
   res.json({ success: true, data: { message: 'Password updated successfully' } });
 }
 
-// GET /api/auth/me
 async function me(req, res) {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id).populate('departmentId', 'name');
   if (!user) return res.status(404).json({ success: false, error: 'User not found' });
-  res.json({ success: true, data: sanitizeUser(user) });
+  const data = sanitizeUser(user);
+  if (user.departmentId) {
+    data.departmentName = user.departmentId.name;
+  }
+  res.json({ success: true, data });
 }
 
 module.exports = { register, login, changePassword, me };

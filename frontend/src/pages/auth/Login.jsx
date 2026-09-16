@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, Loader2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth.jsx';
 
-const HOME_BY_ROLE = { admin: '/admin', lecturer: '/lecturer', student: '/student' };
+const HOME_BY_ROLE = { admin: '/admin', manager: '/manager', staff: '/staff' };
 
 export default function Login() {
   const { login, loading } = useAuth();
@@ -28,7 +28,7 @@ export default function Login() {
       <div className="card w-full max-w-md p-8 md:p-10">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-extrabold bg-gradient-to-r from-primary-600 to-accent-500 bg-clip-text text-transparent mb-2">Smart Attendance</h1>
-          <p className="text-sm text-gray-500 dark:text-cream-200/70">QR-based attendance</p>
+          <p className="text-sm text-gray-500 dark:text-cream-200/70">Employee QR-based attendance system</p>
         </div>
 
         {error && (
@@ -46,7 +46,7 @@ export default function Login() {
                 id="email" type="email" required autoComplete="email" className="input pl-10"
                 value={email} onChange={(e) => setEmail(e.target.value)}
                 aria-describedby={error ? 'login-error' : undefined}
-                placeholder="you@example.com"
+                placeholder="you@company.com"
               />
             </div>
           </div>
@@ -80,3 +80,4 @@ export default function Login() {
     </div>
   );
 }
+

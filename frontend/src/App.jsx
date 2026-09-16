@@ -8,19 +8,25 @@ import Register from './pages/auth/Register.jsx';
 
 import AdminDashboard from './pages/admin/Dashboard.jsx';
 import AdminUsers from './pages/admin/Users.jsx';
-import AdminCourses from './pages/admin/Courses.jsx';
-import AdminAnalytics from './pages/admin/Analytics.jsx';
+import AdminDepartments from './pages/admin/Departments.jsx';
+import AdminReports from './pages/admin/Reports.jsx';
 import AdminSettings from './pages/admin/Settings.jsx';
+import AdminAuditLogs from './pages/admin/AuditLogs.jsx';
+import AdminLeaveReview from './pages/admin/LeaveReview.jsx';
 
-import LecturerCourses from './pages/lecturer/Courses.jsx';
-import LecturerLiveSession from './pages/lecturer/LiveSession.jsx';
-import LecturerReports from './pages/lecturer/Reports.jsx';
+import ManagerDashboard from './pages/manager/Dashboard.jsx';
+import ManagerCheckInQr from './pages/manager/CheckInQr.jsx';
+import ManagerCheckOutQr from './pages/manager/CheckOutQr.jsx';
+import ManagerAttendance from './pages/manager/Attendance.jsx';
+import ManagerLeaveReview from './pages/manager/LeaveReview.jsx';
 
-import StudentDashboard from './pages/student/Dashboard.jsx';
-import StudentScanner from './pages/student/Scanner.jsx';
-import StudentHistory from './pages/student/History.jsx';
+import StaffDashboard from './pages/staff/Dashboard.jsx';
+import StaffScanner from './pages/staff/Scanner.jsx';
+import StaffHistory from './pages/staff/History.jsx';
+import StaffLeave from './pages/staff/Leave.jsx';
+import StaffProfile from './pages/staff/Profile.jsx';
 
-const HOME_BY_ROLE = { admin: '/admin', lecturer: '/lecturer', student: '/student' };
+const HOME_BY_ROLE = { admin: '/admin', manager: '/manager', staff: '/staff' };
 
 function RootRedirect() {
   const { user } = useAuth();
@@ -37,19 +43,26 @@ export default function App() {
 
       <Route path="/admin" element={<ProtectedRoute roles={['admin']}><AdminDashboard /></ProtectedRoute>} />
       <Route path="/admin/users" element={<ProtectedRoute roles={['admin']}><AdminUsers /></ProtectedRoute>} />
-      <Route path="/admin/courses" element={<ProtectedRoute roles={['admin']}><AdminCourses /></ProtectedRoute>} />
-      <Route path="/admin/analytics" element={<ProtectedRoute roles={['admin']}><AdminAnalytics /></ProtectedRoute>} />
+      <Route path="/admin/departments" element={<ProtectedRoute roles={['admin']}><AdminDepartments /></ProtectedRoute>} />
+      <Route path="/admin/reports" element={<ProtectedRoute roles={['admin']}><AdminReports /></ProtectedRoute>} />
       <Route path="/admin/settings" element={<ProtectedRoute roles={['admin']}><AdminSettings /></ProtectedRoute>} />
+      <Route path="/admin/audit-logs" element={<ProtectedRoute roles={['admin']}><AdminAuditLogs /></ProtectedRoute>} />
+      <Route path="/admin/leaves" element={<ProtectedRoute roles={['admin']}><AdminLeaveReview /></ProtectedRoute>} />
 
-      <Route path="/lecturer" element={<ProtectedRoute roles={['lecturer']}><LecturerCourses /></ProtectedRoute>} />
-      <Route path="/lecturer/session/:sessionId" element={<ProtectedRoute roles={['lecturer']}><LecturerLiveSession /></ProtectedRoute>} />
-      <Route path="/lecturer/reports" element={<ProtectedRoute roles={['lecturer']}><LecturerReports /></ProtectedRoute>} />
+      <Route path="/manager" element={<ProtectedRoute roles={['manager']}><ManagerDashboard /></ProtectedRoute>} />
+      <Route path="/manager/check-in-qr" element={<ProtectedRoute roles={['manager']}><ManagerCheckInQr /></ProtectedRoute>} />
+      <Route path="/manager/check-out-qr" element={<ProtectedRoute roles={['manager']}><ManagerCheckOutQr /></ProtectedRoute>} />
+      <Route path="/manager/attendance" element={<ProtectedRoute roles={['manager']}><ManagerAttendance /></ProtectedRoute>} />
+      <Route path="/manager/leaves" element={<ProtectedRoute roles={['manager']}><ManagerLeaveReview /></ProtectedRoute>} />
 
-      <Route path="/student" element={<ProtectedRoute roles={['student']}><StudentDashboard /></ProtectedRoute>} />
-      <Route path="/student/scanner" element={<ProtectedRoute roles={['student']}><StudentScanner /></ProtectedRoute>} />
-      <Route path="/student/history" element={<ProtectedRoute roles={['student']}><StudentHistory /></ProtectedRoute>} />
+      <Route path="/staff" element={<ProtectedRoute roles={['staff']}><StaffDashboard /></ProtectedRoute>} />
+      <Route path="/staff/scanner" element={<ProtectedRoute roles={['staff']}><StaffScanner /></ProtectedRoute>} />
+      <Route path="/staff/history" element={<ProtectedRoute roles={['staff']}><StaffHistory /></ProtectedRoute>} />
+      <Route path="/staff/leave" element={<ProtectedRoute roles={['staff']}><StaffLeave /></ProtectedRoute>} />
+      <Route path="/staff/profile" element={<ProtectedRoute roles={['staff']}><StaffProfile /></ProtectedRoute>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
+

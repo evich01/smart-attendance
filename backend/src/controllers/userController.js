@@ -1,127 +1,137 @@
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
-const Student = require('../models/Student');
-const Lecturer = require('../models/Lecturer');
+const Department = require('../models/Department');
 const AttendanceSession = require('../models/AttendanceSession');
 const AttendanceRecord = require('../models/AttendanceRecord');
+const { logAction } = require('../utils/logger');
 
 const BCRYPT_ROUNDS = 12;
 
-async function generateStudentNumber() {
-  const lastStudent = await Student.findOne().sort({ studentNumber: -1 });
-  if (!lastStudent) {
-    return 'STU-001';
+async function generateEmployeeId(role) {
+  const prefix = role === 'manager' ? 'MGR' : role === 'staff' ? 'EMP' : 'ADM';
+  const lastUser = await User.findOne({ role }).sort({ employeeId: -1 });
+  let nextNum = 1;
+  if (lastUser && lastUser.employeeId) {
+    const match = lastUser.employeeId.match(/-(\d+)$/);
+    if (match) nextNum = parseInt(match[1], 10) + 1;
   }
-  const lastNumber = parseInt(lastStudent.studentNumber.split('-')[1], 10);
-  const newNumber = lastNumber + 1;
-  return `STU-${String(newNumber).padStart(3, '0')}`;
+  return `${prefix}-${String(nextNum).padStart(4, '0')}`;
 }
 
-async function generateStaffId() {
-  const lastLecturer = await Lecturer.findOne().sort({ staffId: -1 });
-  if (!lastLecturer) {
-    return 'STF-001';
-  }
-  const lastNumber = parseInt(lastLecturer.staffId.split('-')[1], 10);
-  const newNumber = lastNumber + 1;
-  return `STF-${String(newNumber).padStart(3, '0')}`;
+function sanitizeUser(u) {
+  return {
+    id: u._id,
+    name: u.name,
+    email: u.email,
+    phone: u.phone || '',
+    role: u.role,
+    isActive: u.isActive,
+    employeeId: u.employeeId || '',
+    departmentId: u.departmentId || null,
+    departmentName: u.departmentId?.name || '',
+    createdAt: u.createdAt
+  };
 }
 
-// GET /api/users?search=&role=&page=&limit=
 async function listUsers(req, res) {
-  const { search = '', role = '', page = 1, limit = 10 } = req.query;
+  const { search = '', role = '', departmentId = '', page = 1, limit = 20 } = req.query;
   const query = {};
   if (role) query.role = role;
+  if (departmentId) query.departmentId = departmentId;
   if (search) {
     query.$or = [
       { name: { $regex: search, $options: 'i' } },
-      { email: { $regex: search, $options: 'i' } }
+      { email: { $regex: search, $options: 'i' } },
+      { employeeId: { $regex: search, $options: 'i' } }
     ];
   }
 
   const pageNum = Math.max(parseInt(page, 10) || 1, 1);
-  const limitNum = Math.max(parseInt(limit, 10) || 10, 1);
+  const limitNum = Math.max(parseInt(limit, 10) || 20, 1);
 
   const [users, total] = await Promise.all([
-    User.find(query).sort({ createdAt: -1 }).skip((pageNum - 1) * limitNum).limit(limitNum),
+    User.find(query)
+      .populate('departmentId', 'name')
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum),
     User.countDocuments(query)
   ]);
 
   res.json({
     success: true,
-    data: users.map((u) => ({
-      id: u._id, name: u.name, email: u.email, role: u.role, isActive: u.isActive, createdAt: u.createdAt
-    })),
+    data: users.map(sanitizeUser),
     pagination: { page: pageNum, limit: limitNum, total, pages: Math.ceil(total / limitNum) }
   });
 }
 
-// GET /api/users/lecturers — get all lecturers with their lecturer profile
-async function listLecturers(req, res) {
-  const lecturers = await Lecturer.find({}).populate('userId', 'name email');
-  res.json({
-    success: true,
-    data: lecturers.map((l) => ({
-      id: l._id,
-      userId: l.userId._id,
-      name: l.userId.name,
-      email: l.userId.email,
-      staffId: l.staffId,
-      department: l.department
-    }))
-  });
-}
-
-// POST /api/users
 async function createUser(req, res) {
-  const { name, email, password, role, department, yearLevel, program, specialisation } = req.body;
+  const { name, email, password, role, phone, departmentId } = req.body;
   if (!name || !email || !password || !role) {
     return res.status(400).json({ success: false, error: 'name, email, password, and role are required' });
+  }
+  if (!['admin', 'manager', 'staff'].includes(role)) {
+    return res.status(400).json({ success: false, error: 'role must be admin, manager, or staff' });
   }
 
   const existing = await User.findOne({ email: email.toLowerCase() });
   if (existing) return res.status(409).json({ success: false, error: 'Email already in use' });
 
-  const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
-  const user = await User.create({ name, email: email.toLowerCase(), passwordHash, role });
-
-  if (role === 'student') {
-    const finalStudentNumber = await generateStudentNumber();
-    await Student.create({ userId: user._id, studentNumber: finalStudentNumber, department, yearLevel, program });
-  } else if (role === 'lecturer') {
-    const finalStaffId = await generateStaffId();
-    await Lecturer.create({ userId: user._id, staffId: finalStaffId, department, specialisation });
+  if (departmentId) {
+    const dept = await Department.findById(departmentId);
+    if (!dept) return res.status(400).json({ success: false, error: 'Invalid department' });
   }
+
+  const passwordHash = await bcrypt.hash(password, BCRYPT_ROUNDS);
+  const employeeId = await generateEmployeeId(role);
+  const user = await User.create({
+    name,
+    email: email.toLowerCase(),
+    phone: phone || '',
+    passwordHash,
+    role,
+    employeeId,
+    departmentId: departmentId || null
+  });
+
+  await logAction({ userId: req.user?.id || user._id, action: 'ADMIN_CREATE_USER', details: `email=${email}, role=${role}`, req });
 
   res.status(201).json({ success: true, data: { id: user._id, name: user.name, email: user.email, role: user.role } });
 }
 
-// PUT /api/users/:id
 async function updateUser(req, res) {
-  const { name, email, isActive } = req.body;
+  const { name, email, isActive, phone, departmentId, role } = req.body;
   const user = await User.findById(req.params.id);
   if (!user) return res.status(404).json({ success: false, error: 'User not found' });
 
   if (name) user.name = name;
   if (email) user.email = email.toLowerCase();
   if (typeof isActive === 'boolean') user.isActive = isActive;
+  if (typeof phone !== 'undefined') user.phone = phone || '';
+  if (departmentId !== undefined) {
+    if (departmentId) {
+      const dept = await Department.findById(departmentId);
+      if (!dept) return res.status(400).json({ success: false, error: 'Invalid department' });
+    }
+    user.departmentId = departmentId || null;
+  }
+  if (role && ['admin', 'manager', 'staff'].includes(role)) user.role = role;
   await user.save();
+
+  await logAction({ userId: req.user.id, action: 'ADMIN_UPDATE_USER', details: `userId=${user._id}`, req });
 
   res.json({ success: true, data: { id: user._id, name: user.name, email: user.email, isActive: user.isActive } });
 }
 
-// DELETE /api/users/:id
 async function deleteUser(req, res) {
   const user = await User.findByIdAndDelete(req.params.id);
   if (!user) return res.status(404).json({ success: false, error: 'User not found' });
 
-  if (user.role === 'student') await Student.deleteOne({ userId: user._id });
-  if (user.role === 'lecturer') await Lecturer.deleteOne({ userId: user._id });
+  await logAction({ userId: req.user.id, action: 'ADMIN_DELETE_USER', details: `userId=${user._id}, email=${user.email}`, req });
 
   res.json({ success: true, data: { message: 'User deleted' } });
 }
 
-// PATCH /api/users/:id/status
 async function toggleStatus(req, res) {
   const user = await User.findById(req.params.id);
   if (!user) return res.status(404).json({ success: false, error: 'User not found' });
@@ -129,48 +139,103 @@ async function toggleStatus(req, res) {
   user.isActive = !user.isActive;
   await user.save();
 
+  await logAction({ userId: req.user.id, action: 'ADMIN_TOGGLE_USER_STATUS', details: `userId=${user._id}, isActive=${user.isActive}`, req });
+
   res.json({ success: true, data: { id: user._id, isActive: user.isActive } });
 }
 
-// GET /api/users/stats — aggregate stats for admin dashboard
 async function userStats(req, res) {
-  const [totalAdmins, totalLecturers, totalStudents, totalSessions, totalAttendance] = await Promise.all([
+  const [totalAdmins, totalManagers, totalStaff, totalCheckInSessions, totalCheckOutSessions, totalRecords] = await Promise.all([
     User.countDocuments({ role: 'admin' }),
-    User.countDocuments({ role: 'lecturer' }),
-    User.countDocuments({ role: 'student' }),
-    AttendanceSession.countDocuments({}),
+    User.countDocuments({ role: 'manager' }),
+    User.countDocuments({ role: 'staff' }),
+    AttendanceSession.countDocuments({ type: 'CHECK_IN' }),
+    AttendanceSession.countDocuments({ type: 'CHECK_OUT' }),
     AttendanceRecord.countDocuments({})
   ]);
 
-  // Last 7 days registration trend
   const since = new Date();
   since.setDate(since.getDate() - 6);
   since.setHours(0, 0, 0, 0);
 
-  const registrations = await User.find({ createdAt: { $gte: since } }).select('createdAt');
-  const regTrendMap = {};
+  const records = await AttendanceRecord.find({ date: { $gte: since } }).select('date status');
+  const trendMap = {};
   for (let i = 0; i < 7; i++) {
     const d = new Date(since);
     d.setDate(d.getDate() + i);
     const key = d.toISOString().slice(0, 10);
-    regTrendMap[key] = 0;
+    trendMap[key] = { present: 0, late: 0, absent: 0, total: 0 };
   }
-  registrations.forEach((r) => {
-    const key = r.createdAt.toISOString().slice(0, 10);
-    if (regTrendMap[key] !== undefined) regTrendMap[key] += 1;
+  records.forEach((r) => {
+    const key = new Date(r.date).toISOString().slice(0, 10);
+    if (trendMap[key]) {
+      trendMap[key].total++;
+      if (r.status === 'present') trendMap[key].present++;
+      else if (r.status === 'late') trendMap[key].late++;
+      else if (r.status === 'absent') trendMap[key].absent++;
+    }
   });
-  const registrationTrend = Object.entries(regTrendMap).map(([date, count]) => ({ date, count }));
+  const attendanceTrend = Object.entries(trendMap).map(([date, stats]) => ({ date, ...stats }));
+
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date();
+  todayEnd.setHours(23, 59, 59, 999);
+  const todayRecords = await AttendanceRecord.find({ date: { $gte: todayStart, $lte: todayEnd } });
+  let todayPresent = 0, todayLate = 0, todayMissingCheckout = 0;
+  todayRecords.forEach((r) => {
+    if (r.status === 'present' && r.checkOutTime) todayPresent++;
+    else if (r.status === 'late' && r.checkOutTime) todayLate++;
+    else if (r.checkInTime && !r.checkOutTime) todayMissingCheckout++;
+  });
+  const todayNotCheckedIn = Math.max(0, totalStaff - todayRecords.length);
 
   res.json({
     success: true,
     data: {
-      usersByRole: { admin: totalAdmins, lecturer: totalLecturers, student: totalStudents },
-      totalUsers: totalAdmins + totalLecturers + totalStudents,
-      totalSessions,
-      totalAttendanceRecords: totalAttendance,
-      registrationTrend
+      usersByRole: { admin: totalAdmins, manager: totalManagers, staff: totalStaff },
+      totalUsers: totalAdmins + totalManagers + totalStaff,
+      totalSessions: { checkIn: totalCheckInSessions, checkOut: totalCheckOutSessions },
+      totalAttendanceRecords: totalRecords,
+      attendanceTrend,
+      today: {
+        present: todayPresent,
+        late: todayLate,
+        missingCheckout: todayMissingCheckout,
+        notCheckedIn: todayNotCheckedIn,
+        totalStaff
+      }
     }
   });
 }
 
-module.exports = { listUsers, createUser, updateUser, deleteUser, toggleStatus, userStats, listLecturers };
+async function listStaff(req, res) {
+  const scope = await (async () => {
+    if (req.user.role === 'admin') return { all: true };
+    if (req.user.role === 'manager') {
+      const depts = await Department.find({ managerId: req.user.id }).select('_id');
+      return { all: false, departmentIds: depts.map((d) => d._id) };
+    }
+    return null;
+  })();
+  if (!scope) return res.status(403).json({ success: false, error: 'Unauthorized' });
+
+  const query = { role: 'staff', isActive: true };
+  if (!scope.all) query.departmentId = { $in: scope.departmentIds };
+
+  const staff = await User.find(query).populate('departmentId', 'name').select('_id name email employeeId departmentId phone');
+  res.json({
+    success: true,
+    data: staff.map((s) => ({
+      id: s._id,
+      name: s.name,
+      email: s.email,
+      phone: s.phone || '',
+      employeeId: s.employeeId || '',
+      departmentId: s.departmentId?._id || null,
+      departmentName: s.departmentId?.name || ''
+    }))
+  });
+}
+
+module.exports = { listUsers, createUser, updateUser, deleteUser, toggleStatus, userStats, listStaff };

@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import Layout from '../../components/Layout.jsx';
-import { userApi } from '../../api/endpoints';
+import { userApi, departmentApi } from '../../api/endpoints';
 
-const EMPTY_FORM = { name: '', email: '', password: '', role: 'student' };
+const EMPTY_FORM = { name: '', email: '', password: '', role: 'staff', phone: '', departmentId: '' };
 
 export default function Users() {
   const [users, setUsers] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [page, setPage] = useState(1);
@@ -21,7 +22,10 @@ export default function Users() {
       .catch((err) => setError(err.response?.data?.error || 'Failed to load users'));
   }, [search, roleFilter, page]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    departmentApi.list().then(({ data }) => setDepartments(data.data)).catch(() => {});
+  }, [load]);
 
   function openCreate() {
     setEditing(null);
@@ -31,7 +35,14 @@ export default function Users() {
 
   function openEdit(user) {
     setEditing(user);
-    setForm({ name: user.name, email: user.email, password: '', role: user.role });
+    setForm({
+      name: user.name,
+      email: user.email,
+      password: '',
+      role: user.role,
+      phone: user.phone || '',
+      departmentId: user.departmentId || ''
+    });
     setModalOpen(true);
   }
 
@@ -40,7 +51,13 @@ export default function Users() {
     setError('');
     try {
       if (editing) {
-        await userApi.update(editing.id, { name: form.name, email: form.email });
+        await userApi.update(editing.id, {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          role: form.role,
+          departmentId: form.departmentId || null
+        });
       } else {
         await userApi.create(form);
       }
@@ -65,20 +82,20 @@ export default function Users() {
   return (
     <Layout>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
-        <h1 className="text-2xl font-bold">Users</h1>
-        <button className="btn-primary" onClick={openCreate}>+ New User</button>
+        <h1 className="text-2xl font-bold">Employees</h1>
+        <button className="btn-primary" onClick={openCreate}>+ New Employee</button>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <input
-          className="input sm:max-w-xs" placeholder="Search name or email…"
+          className="input sm:max-w-xs" placeholder="Search name, email, or ID…"
           value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }}
         />
         <select className="input sm:max-w-[160px]" value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setPage(1); }}>
           <option value="">All roles</option>
           <option value="admin">Admin</option>
-          <option value="lecturer">Lecturer</option>
-          <option value="student">Student</option>
+          <option value="manager">Manager</option>
+          <option value="staff">Staff</option>
         </select>
       </div>
 
@@ -88,16 +105,23 @@ export default function Users() {
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left border-b border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400">
-              <th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Role</th>
-              <th className="p-3">Status</th><th className="p-3">Actions</th>
+              <th className="p-3">Name</th>
+              <th className="p-3">Employee ID</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Role</th>
+              <th className="p-3">Department</th>
+              <th className="p-3">Status</th>
+              <th className="p-3">Actions</th>
             </tr>
           </thead>
           <tbody>
             {users.map((u) => (
               <tr key={u.id} className="border-b border-gray-100 dark:border-gray-800">
                 <td className="p-3">{u.name}</td>
+                <td className="p-3 font-mono text-xs">{u.employeeId || '—'}</td>
                 <td className="p-3">{u.email}</td>
                 <td className="p-3 capitalize">{u.role}</td>
+                <td className="p-3">{u.departmentName || '—'}</td>
                 <td className="p-3">
                   <button onClick={() => handleToggle(u.id)} className={u.isActive ? 'badge-good' : 'badge-risk'}>
                     {u.isActive ? 'Active' : 'Inactive'}
@@ -110,7 +134,7 @@ export default function Users() {
               </tr>
             ))}
             {users.length === 0 && (
-              <tr><td colSpan={5} className="p-6 text-center text-gray-500">No users found.</td></tr>
+              <tr><td colSpan={7} className="p-6 text-center text-gray-500">No users found.</td></tr>
             )}
           </tbody>
         </table>
@@ -119,17 +143,15 @@ export default function Users() {
       {pagination && pagination.pages > 1 && (
         <div className="flex justify-center gap-2 mt-4">
           {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((p) => (
-            <button key={p} onClick={() => setPage(p)} className={p === page ? 'btn-primary px-3 py-1' : 'btn-secondary px-3 py-1'}>
-              {p}
-            </button>
+            <button key={p} onClick={() => setPage(p)} className={p === page ? 'btn-primary px-3 py-1' : 'btn-secondary px-3 py-1'}>{p}</button>
           ))}
         </div>
       )}
 
       {modalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="card w-full max-w-md p-6">
-            <h2 className="text-lg font-bold mb-4">{editing ? 'Edit User' : 'New User'}</h2>
+          <div className="card w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
+            <h2 className="text-lg font-bold mb-4">{editing ? 'Edit Employee' : 'New Employee'}</h2>
             <form onSubmit={handleSave} className="space-y-3">
               <div>
                 <label className="label">Name</label>
@@ -140,21 +162,30 @@ export default function Users() {
                 <input required type="email" className="input" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               </div>
               {!editing && (
-                <>
-                  <div>
-                    <label className="label">Password</label>
-                    <input required type="password" className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                  </div>
-                  <div>
-                    <label className="label">Role</label>
-                    <select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-                      <option value="student">Student</option>
-                      <option value="lecturer">Lecturer</option>
-                      <option value="admin">Admin</option>
-                    </select>
-                  </div>
-                </>
+                <div>
+                  <label className="label">Password</label>
+                  <input required type="password" className="input" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                </div>
               )}
+              <div>
+                <label className="label">Role</label>
+                <select className="input" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+                  <option value="staff">Staff</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              <div>
+                <label className="label">Phone</label>
+                <input className="input" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              </div>
+              <div>
+                <label className="label">Department</label>
+                <select className="input" value={form.departmentId} onChange={(e) => setForm({ ...form, departmentId: e.target.value })}>
+                  <option value="">None</option>
+                  {departments.map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}
+                </select>
+              </div>
               <div className="flex gap-2 pt-2">
                 <button type="submit" className="btn-primary flex-1">Save</button>
                 <button type="button" className="btn-secondary flex-1" onClick={() => setModalOpen(false)}>Cancel</button>
