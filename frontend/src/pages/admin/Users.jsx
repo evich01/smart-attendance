@@ -99,7 +99,6 @@ export default function Users() {
         </select>
       </div>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
 
       <div className="card overflow-x-auto">
         <table className="w-full text-sm">
@@ -152,6 +151,8 @@ export default function Users() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="card w-full max-w-md p-6 max-h-[90vh] overflow-y-auto">
             <h2 className="text-lg font-bold mb-4">{editing ? 'Edit Employee' : 'New Employee'}</h2>
+      {error && <p className="text-red-600 mb-4">{error}</p>}
+
             <form onSubmit={handleSave} className="space-y-3">
               <div>
                 <label className="label">Name</label>

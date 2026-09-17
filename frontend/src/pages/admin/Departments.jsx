@@ -64,7 +64,6 @@ export default function Departments() {
         <button className="btn-primary" onClick={openCreate}>+ New Department</button>
       </div>
 
-      {error && <p className="text-red-600 mb-4">{error}</p>}
 
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {departments.map((d) => (
@@ -82,10 +81,11 @@ export default function Departments() {
         {departments.length === 0 && <p className="text-gray-500">No departments yet.</p>}
       </div>
 
-      {modalOpen && (
+      {modalOpen && ( 
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="card w-full max-w-md p-6">
             <h2 className="text-lg font-bold mb-4">{editing ? 'Edit Department' : 'New Department'}</h2>
+      {error && <p className="text-red-600 mb-4">{error}</p>}
             <form onSubmit={handleSave} className="space-y-3">
               <div>
                 <label className="label">Name</label>
