@@ -71,11 +71,7 @@ export default function Login() {
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-cream-200 dark:border-gray-700">
-          <p className="text-sm text-center text-gray-600 dark:text-cream-200/70">
-            Don't have an account? <Link to="/register" className="text-primary-600 font-bold hover:text-primary-700 transition-colors">Register</Link>
-          </p>
-        </div>
+       
       </div>
     </div>
   );
